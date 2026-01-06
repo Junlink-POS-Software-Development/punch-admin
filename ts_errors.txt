@@ -1,0 +1,15 @@
+﻿app/(dashboard)/analytics/page.tsx(191,21): error TS2322: Type '(value: number) => string' is not assignable to type 'Formatter<number, NameType>'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+app/(dashboard)/analytics/page.tsx(233,21): error TS2322: Type '(value: number) => string' is not assignable to type 'Formatter<number, NameType>'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+app/(dashboard)/analytics/page.tsx(284,21): error TS2322: Type 'CategoryData[]' is not assignable to type 'ChartDataInput[]'.
+  Type 'CategoryData' is not assignable to type 'ChartDataInput'.
+    Index signature for type 'string' is missing in type 'CategoryData'.
+app/(dashboard)/analytics/page.tsx(302,21): error TS2322: Type '(value: number) => string' is not assignable to type 'Formatter<number, NameType>'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.

@@ -1,0 +1,10 @@
+﻿.next/types/validator.ts(62,39): error TS2307: Cannot find module '../../app/(dashboard)/analytics/page.js' or its corresponding type declarations.
+.next/types/validator.ts(71,39): error TS2307: Cannot find module '../../app/(dashboard)/members/page.js' or its corresponding type declarations.
+.next/types/validator.ts(80,39): error TS2307: Cannot find module '../../app/(dashboard)/page.js' or its corresponding type declarations.
+.next/types/validator.ts(89,39): error TS2307: Cannot find module '../../app/(dashboard)/settings/audit/page.js' or its corresponding type declarations.
+.next/types/validator.ts(98,39): error TS2307: Cannot find module '../../app/(dashboard)/settings/page.js' or its corresponding type declarations.
+.next/types/validator.ts(107,39): error TS2307: Cannot find module '../../app/(dashboard)/settings/system/page.js' or its corresponding type declarations.
+.next/types/validator.ts(116,39): error TS2307: Cannot find module '../../app/(dashboard)/settings/users/page.js' or its corresponding type declarations.
+.next/types/validator.ts(125,39): error TS2307: Cannot find module '../../app/(dashboard)/stores/[id]/page.js' or its corresponding type declarations.
+.next/types/validator.ts(134,39): error TS2307: Cannot find module '../../app/(dashboard)/stores/page.js' or its corresponding type declarations.
+.next/types/validator.ts(143,39): error TS2307: Cannot find module '../../app/(dashboard)/transactions/page.js' or its corresponding type declarations.
