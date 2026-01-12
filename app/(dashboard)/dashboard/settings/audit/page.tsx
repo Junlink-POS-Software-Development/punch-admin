@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils/cn'
 const mockLogs = [
   { id: '1', action: 'User Login', user: 'john@junlink.com', type: 'auth', timestamp: new Date().toISOString(), ip: '192.168.1.1' },
   { id: '2', action: 'Store Created', user: 'sarah@junlink.com', type: 'store', timestamp: new Date(Date.now() - 3600000).toISOString(), ip: '192.168.1.2' },
-  { id: '3', action: 'Member Added', user: 'john@junlink.com', type: 'member', timestamp: new Date(Date.now() - 7200000).toISOString(), ip: '192.168.1.1' },
+  { id: '3', action: 'Staff Added', user: 'john@junlink.com', type: 'staff', timestamp: new Date(Date.now() - 7200000).toISOString(), ip: '192.168.1.1' },
   { id: '4', action: 'Settings Updated', user: 'john@junlink.com', type: 'settings', timestamp: new Date(Date.now() - 10800000).toISOString(), ip: '192.168.1.1' },
   { id: '5', action: 'Transaction Deleted', user: 'sarah@junlink.com', type: 'transaction', timestamp: new Date(Date.now() - 14400000).toISOString(), ip: '192.168.1.2' },
   { id: '6', action: 'User Password Reset', user: 'mike@junlink.com', type: 'auth', timestamp: new Date(Date.now() - 18000000).toISOString(), ip: '192.168.1.3' },
@@ -18,7 +18,7 @@ const mockLogs = [
 const typeIcons: Record<string, typeof Shield> = {
   auth: Shield,
   store: Database,
-  member: User,
+  staff: User,
   settings: Settings,
   transaction: Database,
 }
@@ -26,7 +26,7 @@ const typeIcons: Record<string, typeof Shield> = {
 const typeColors: Record<string, string> = {
   auth: 'bg-primary/10 text-primary',
   store: 'bg-success/10 text-success',
-  member: 'bg-warning/10 text-warning',
+  staff: 'bg-warning/10 text-warning',
   settings: 'bg-muted text-muted-foreground',
   transaction: 'bg-destructive/10 text-destructive',
 }
@@ -74,7 +74,7 @@ export default function AuditLogsPage() {
           <option value="">All Types</option>
           <option value="auth">Authentication</option>
           <option value="store">Store</option>
-          <option value="member">Member</option>
+          <option value="staff">Staff</option>
           <option value="settings">Settings</option>
           <option value="transaction">Transaction</option>
         </select>

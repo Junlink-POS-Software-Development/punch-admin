@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
   const [revenueData, setRevenueData] = useState<RevenueData[]>([])
   const [storeData, setStoreData] = useState<StoreData[]>([])
   const [categoryData, setCategoryData] = useState<CategoryData[]>([])
-  const [memberGrowth, setMemberGrowth] = useState<{ date: string; members: number }[]>([])
+  const [staffGrowth, setStaffGrowth] = useState<{ date: string; staff: number }[]>([])
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState('30')
   const supabase = createClient()
@@ -101,19 +101,19 @@ export default function AnalyticsPage() {
           ])
         }
 
-        // Generate mock member growth data
-        const growth: { date: string; members: number }[] = []
-        let memberCount = 10
+        // Generate mock staff growth data
+        const growth: { date: string; staff: number }[] = []
+        let staffCount = 10
         for (let i = parseInt(dateRange); i >= 0; i -= Math.ceil(parseInt(dateRange) / 10)) {
           const date = new Date()
           date.setDate(date.getDate() - i)
-          memberCount += Math.floor(Math.random() * 3)
+          staffCount += Math.floor(Math.random() * 3)
           growth.push({
             date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            members: memberCount
+            staff: staffCount
           })
         }
-        setMemberGrowth(growth)
+        setStaffGrowth(growth)
 
       } catch (error) {
         console.error('Failed to fetch analytics:', error)
@@ -243,15 +243,15 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Member Growth */}
+        {/* Staff Growth */}
         <div className="rounded-xl border border-border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Member Growth</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Staff Growth</h3>
           <div className="h-64">
             {loading ? (
               <div className="h-full animate-shimmer rounded-lg" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={memberGrowth}>
+                <AreaChart data={staffGrowth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="date" tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} />
                   <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} />
@@ -264,7 +264,7 @@ export default function AnalyticsPage() {
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="members" 
+                    dataKey="staff" 
                     stroke="#8b5cf6" 
                     fill="#8b5cf680"
                     strokeWidth={2}

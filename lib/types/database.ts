@@ -19,7 +19,7 @@ export interface Admin {
   email: string | null
 }
 
-export interface Member {
+export interface Staff {
   user_id: string
   first_name: string | null
   last_name: string | null
@@ -46,8 +46,8 @@ export interface Store {
   enrollment_id: string
 }
 
-export interface StoreWithMemberCount extends Store {
-  member_count: number
+export interface StoreWithStaffCount extends Store {
+  staff_count: number
 }
 
 export interface StoreSubscription {

@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { StoreCard } from '@/components/stores/StoreCard'
 import { CreateStoreCard } from '@/components/stores/CreateStoreCard'
 import { Store, Search } from 'lucide-react'
-import type { StoreWithMemberCount } from '@/lib/types/database'
+import type { StoreWithStaffCount } from '@/lib/types/database'
 
 export default function StoresPage() {
-  const [stores, setStores] = useState<StoreWithMemberCount[]>([])
+  const [stores, setStores] = useState<StoreWithStaffCount[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const supabase = createClient()
@@ -24,8 +24,8 @@ export default function StoresPage() {
 
         if (error) throw error
 
-        // Get member counts for each store
-        const storesWithCounts: StoreWithMemberCount[] = await Promise.all(
+        // Get staff counts for each store
+        const storesWithCounts: StoreWithStaffCount[] = await Promise.all(
           (storesData || []).map(async (store) => {
             const { count } = await supabase
               .from('members')
@@ -34,7 +34,7 @@ export default function StoresPage() {
 
             return {
               ...store,
-              member_count: count || 0,
+              staff_count: count || 0,
             }
           })
         )

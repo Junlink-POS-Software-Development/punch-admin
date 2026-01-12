@@ -9,21 +9,21 @@ import { DollarSign, Users, Store, Clock } from 'lucide-react'
 
 interface DashboardStats {
   totalRevenue: number
-  activeMembers: number
+  activeStaff: number
   totalStores: number
   pendingTransactions: number
   revenueTrend: number
-  memberTrend: number
+  staffTrend: number
 }
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalRevenue: 0,
-    activeMembers: 0,
+    activeStaff: 0,
     totalStores: 0,
     pendingTransactions: 0,
     revenueTrend: 12.5,
-    memberTrend: 8.2,
+    staffTrend: 8.2,
   })
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -43,8 +43,8 @@ export default function DashboardPage() {
 
         const totalRevenue = revenueData?.reduce((sum, t) => sum + (t.total_price || 0), 0) || 0
 
-        // Get member count
-        const { count: memberCount } = await supabase
+        // Get staff count
+        const { count: staffCount } = await supabase
           .from('members')
           .select('*', { count: 'exact', head: true })
 
@@ -63,11 +63,11 @@ export default function DashboardPage() {
 
         setStats({
           totalRevenue,
-          activeMembers: memberCount || 0,
+          activeStaff: staffCount || 0,
           totalStores: storeCount || 0,
           pendingTransactions: todayTransactions || 0,
           revenueTrend: 12.5, // Mock trend data
-          memberTrend: 8.2,
+          staffTrend: 8.2,
         })
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error)
@@ -101,12 +101,12 @@ export default function DashboardPage() {
           subtitle="vs last month"
         />
         <KPICard
-          title="Active Members"
-          value={stats.activeMembers}
+          title="Active Staff"
+          value={stats.activeStaff}
           icon={Users}
           variant="success"
           format="number"
-          trend={{ value: stats.memberTrend, isPositive: true }}
+          trend={{ value: stats.staffTrend, isPositive: true }}
           subtitle="total enrolled"
         />
         <KPICard

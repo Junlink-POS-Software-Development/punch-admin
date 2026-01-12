@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { MapPin, Users, Hash } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { formatAddress } from '@/lib/utils/formatters'
-import type { StoreWithMemberCount, StoreAddress } from '@/lib/types/database'
+import type { StoreWithStaffCount, StoreAddress } from '@/lib/types/database'
 
 interface StoreCardProps {
-  store: StoreWithMemberCount
+  store: StoreWithStaffCount
 }
 
 export function StoreCard({ store }: StoreCardProps) {
@@ -56,13 +56,13 @@ export function StoreCard({ store }: StoreCardProps) {
           </span>
         </div>
 
-        {/* Active Members */}
+        {/* Active Staff */}
         <div className="flex items-center gap-2 text-sm">
           <div className="flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-success">
             <Users className="h-3.5 w-3.5" />
-            <span className="font-medium">{store.member_count}</span>
+            <span className="font-medium">{store.staff_count}</span>
           </div>
-          <span className="text-muted-foreground">active members</span>
+          <span className="text-muted-foreground">active staff</span>
         </div>
       </div>
     </Link>

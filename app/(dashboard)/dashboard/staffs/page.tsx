@@ -5,14 +5,14 @@ import { createClient } from '@/lib/supabase/client'
 import { Search, Users, Filter, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import Link from 'next/link'
-import type { Member, Store } from '@/lib/types/database'
+import type { Staff, Store } from '@/lib/types/database'
 
-interface MemberWithStore extends Member {
+interface StaffWithStore extends Staff {
   stores?: Store | null
 }
 
-export default function MembersPage() {
-  const [members, setMembers] = useState<MemberWithStore[]>([])
+export default function StaffPage() {
+  const [staff, setStaff] = useState<StaffWithStore[]>([])
   const [stores, setStores] = useState<Store[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -30,8 +30,8 @@ export default function MembersPage() {
 
         setStores(storesData || [])
 
-        // Fetch members with store info
-        const { data: membersData, error } = await supabase
+        // Fetch staff with store info
+        const { data: staffData, error } = await supabase
           .from('members')
           .select(`
             *,
@@ -40,9 +40,9 @@ export default function MembersPage() {
           .order('first_name')
 
         if (error) throw error
-        setMembers(membersData || [])
+        setStaff(staffData || [])
       } catch (error) {
-        console.error('Failed to fetch members:', error)
+        console.error('Failed to fetch staff:', error)
       } finally {
         setLoading(false)
       }
@@ -51,7 +51,7 @@ export default function MembersPage() {
     fetchData()
   }, [supabase])
 
-  const filteredMembers = members.filter((member) => {
+  const filteredStaff = staff.filter((member) => {
     const matchesSearch = 
       member.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       member.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -66,9 +66,9 @@ export default function MembersPage() {
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Members</h1>
+        <h1 className="text-2xl font-bold text-foreground">Staff</h1>
         <p className="text-muted-foreground">
-          Manage members enrolled across all stores
+          Manage staff enrolled across all stores
         </p>
       </div>
 
@@ -98,14 +98,14 @@ export default function MembersPage() {
         </select>
       </div>
 
-      {/* Members Table */}
+      {/* Staff Table */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Member
+                  Staff
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Email
@@ -137,21 +137,21 @@ export default function MembersPage() {
                     <td className="px-6 py-4"><div className="h-4 w-8 rounded animate-shimmer ml-auto" /></td>
                   </tr>
                 ))
-              ) : filteredMembers.length === 0 ? (
+              ) : filteredStaff.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
                     <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium text-foreground">No members found</p>
+                    <p className="text-lg font-medium text-foreground">No staff found</p>
                     <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map((member) => (
+                filteredStaff.map((member) => (
                   <tr key={member.user_id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-6 py-4">
-                      <Link href={`/dashboard/members/${member.user_id}`} className="flex items-center gap-3 group">
+                      <Link href={`/dashboard/staffs/${member.user_id}`} className="flex items-center gap-3 group">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-                          {member.first_name?.charAt(0).toUpperCase() || 'M'}
+                          {member.first_name?.charAt(0).toUpperCase() || 'S'}
                         </div>
                         <span className="font-medium text-foreground group-hover:text-primary transition-colors">
                           {`${member.first_name || ''} ${member.last_name || ''}`.trim() || 'Unknown'}
@@ -167,7 +167,7 @@ export default function MembersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">
-                      {member.job_title || 'Member'}
+                      {member.job_title || 'Staff'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">

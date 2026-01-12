@@ -4,9 +4,9 @@ import { cn } from '@/lib/utils/cn'
 
 const actions = [
   {
-    name: 'Add Member',
-    description: 'Register a new member',
-    href: '/dashboard/members/new',
+    name: 'Add Staff',
+    description: 'Register a new staff',
+    href: '/dashboard/staffs/new',
     icon: UserPlus,
     color: 'bg-primary/10 text-primary hover:bg-primary/20',
   },

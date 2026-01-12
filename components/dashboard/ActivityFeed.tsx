@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils/cn'
 
 interface Activity {
   id: string
-  type: 'transaction' | 'member' | 'store'
+  type: 'transaction' | 'staff' | 'store'
   title: string
   description: string
   timestamp: string
@@ -17,13 +17,13 @@ interface Activity {
 
 const typeIcons = {
   transaction: Receipt,
-  member: UserPlus,
+  staff: UserPlus,
   store: Store,
 }
 
 const typeColors = {
   transaction: 'bg-primary/10 text-primary',
-  member: 'bg-success/10 text-success',
+  staff: 'bg-success/10 text-success',
   store: 'bg-warning/10 text-warning',
 }
 
@@ -42,8 +42,8 @@ export function ActivityFeed() {
           .order('transaction_time', { ascending: false })
           .limit(5)
 
-        // Fetch recent members
-        const { data: members } = await supabase
+        // Fetch recent staff
+        const { data: staff } = await supabase
           .from('members')
           .select('user_id, first_name, last_name, store_id')
           .order('user_id', { ascending: false })
@@ -65,15 +65,15 @@ export function ActivityFeed() {
           })
         }
 
-        // Add members to activity list
-        if (members) {
-          members.forEach((m) => {
+        // Add staff to activity list
+        if (staff) {
+          staff.forEach((m) => {
             activityList.push({
               id: m.user_id,
-              type: 'member',
-              title: 'Member Enrolled',
-              description: `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'New member',
-              timestamp: new Date().toISOString(), // Members don't have created_at in schema
+              type: 'staff',
+              title: 'Staff Enrolled',
+              description: `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'New staff',
+              timestamp: new Date().toISOString(), // Staff don't have created_at in schema
             })
           })
         }
