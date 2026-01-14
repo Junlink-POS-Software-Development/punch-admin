@@ -13,6 +13,21 @@ export interface Store {
   created_at?: string;
 }
 
+export interface InventoryItem {
+  item_id: string;
+  item_name: string;
+  sku: string;
+  category: string | null;
+  cost_price: number;
+  low_stock_threshold: number | null;
+  quantity_in: number;
+  quantity_manual_out: number;
+  quantity_sold: number;
+  current_stock: number;
+  stock_status: 'out_of_stock' | 'low_stock' | 'in_stock';
+  store_id: string;
+}
+
 /**
  * Fetch all stores the user has access to (via RLS) and include the member count.
  */
@@ -107,6 +122,20 @@ export async function createStore(
     throw error
   }
 
+  // 5. Add creator as a member (Owner)
+  const { error: memberError } = await supabase
+    .from('members')
+    .insert({
+      user_id: user.id,
+      store_id: data.store_id,
+      email: user.email,
+      job_title: 'Owner',
+    })
+
+  if (memberError) {
+    console.error('Error adding creator to members:', memberError)
+  }
+
   return data as Store
 }
 
@@ -141,8 +170,6 @@ export interface StoreDashboardStats {
   daily_expenses: number
   monthly_gross_income: number
 }
-
-// ... existing code ...
 
 /**
  * Fetch a single store by ID
@@ -181,4 +208,35 @@ export async function getStoreStats(supabase: SupabaseClient, storeId: string): 
   }
 
   return data as StoreDashboardStats
+}
+
+/**
+ * Fetch store inventory from the inventory_monitor_view
+ */
+export async function getStoreInventory(supabase: SupabaseClient, storeId: string): Promise<InventoryItem[]> {
+  console.log('getStoreInventory called for storeId:', storeId);
+
+  // DEBUG: Check if we can fetch from items table directly
+  const { data: itemsData, error: itemsError } = await supabase
+    .from('items')
+    .select('*')
+    .eq('store_id', storeId)
+    .limit(5);
+  
+  console.log('DEBUG: Direct fetch from items table:', { itemsData, itemsError });
+
+  const { data, error } = await supabase
+    .from('inventory_monitor_view')
+    .select('*')
+    .eq('store_id', storeId)
+    .order('item_name', { ascending: true })
+
+  console.log('DEBUG: Fetch from inventory_monitor_view:', { data, error });
+
+  if (error) {
+    console.error('Error fetching store inventory:', error)
+    return []
+  }
+
+  return data as InventoryItem[]
 }
