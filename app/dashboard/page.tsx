@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { KPICard } from '@/components/dashboard/KPICard'
-import { QuickActions } from '@/components/dashboard/QuickActions'
-import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
+import { KPICard } from './components/KPICard'
+import { QuickActions } from './components/QuickActions'
+import { ActivityFeed } from './components/ActivityFeed'
 import { DollarSign, Users, Store, Clock } from 'lucide-react'
 
 interface DashboardStats {

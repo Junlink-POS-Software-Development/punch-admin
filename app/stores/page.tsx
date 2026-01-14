@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { StoreCard } from '@/components/stores/StoreCard'
-import { CreateStoreCard } from '@/components/stores/CreateStoreCard'
+import { StoreCard } from './components/StoreCard'
+import { CreateStoreCard } from './components/CreateStoreCard'
 import { Store, Search } from 'lucide-react'
 import type { StoreWithStaffCount } from '@/lib/types/database'
 

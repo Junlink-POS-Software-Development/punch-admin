@@ -132,3 +132,53 @@ export async function uploadStoreImage(supabase: SupabaseClient, file: File): Pr
 
   return publicUrl
 }
+
+
+// Add this interface
+export interface StoreDashboardStats {
+  cash_on_hand: number
+  daily_gross_income: number
+  daily_expenses: number
+  monthly_gross_income: number
+}
+
+// ... existing code ...
+
+/**
+ * Fetch a single store by ID
+ */
+export async function getStoreById(supabase: SupabaseClient, storeId: string): Promise<Store | null> {
+  const { data, error } = await supabase
+    .from('stores')
+    .select('*')
+    .eq('store_id', storeId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching store:', error)
+    return null
+  }
+  return data
+}
+
+/**
+ * Fetch dashboard statistics using the Database RPC
+ */
+
+export async function getStoreStats(supabase: SupabaseClient, storeId: string): Promise<StoreDashboardStats> {
+  // CHANGED: calling 'get_dashboard_stats_via_view' instead of 'get_store_dashboard_stats'
+  const { data, error } = await supabase
+    .rpc('get_dashboard_stats_via_view', { target_store_id: storeId })
+
+  if (error) {
+    console.error('Error fetching store stats:', error)
+    return {
+      cash_on_hand: 0,
+      daily_gross_income: 0,
+      daily_expenses: 0,
+      monthly_gross_income: 0
+    }
+  }
+
+  return data as StoreDashboardStats
+}

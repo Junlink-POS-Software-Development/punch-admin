@@ -13,16 +13,16 @@ import {
   ChevronRight,
   Hexagon
 } from 'lucide-react'
-import { useUIStore } from '@/lib/stores/uiStore'
+import { useUIStore } from '@/app/dashboard/stores/uiStore'
 import { cn } from '@/lib/utils/cn'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Staff', href: '/dashboard/staffs', icon: Users },
-  { name: 'Stores', href: '/dashboard/stores', icon: Store },
-  { name: 'Transactions', href: '/dashboard/transactions', icon: Receipt },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: 'Staff', href: '/staff', icon: Users },
+  { name: 'Stores', href: '/stores', icon: Store },
+  { name: 'Transactions', href: '/transaction', icon: Receipt },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 export function Sidebar() {
@@ -70,7 +70,7 @@ export function Sidebar() {
               title={sidebarCollapsed ? item.name : undefined}
             >
               <item.icon className={cn(
-                'h-5 w-5 flex-shrink-0 transition-transform duration-200',
+                'h-5 w-5 shrink-0 transition-transform duration-200',
                 !isActive && 'group-hover:scale-110'
               )} />
               {!sidebarCollapsed && (

@@ -34,11 +34,23 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect dashboard routes
-  if (
-    !user &&
-    request.nextUrl.pathname.startsWith('/dashboard')
-  ) {
+  // Redirect / to /dashboard
+  if (request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect /dashboard to /dashboard (redundant but keeping for clarity if needed, 
+  // actually the user said "separate dashboard folder for the dashboard features and have it route on /dashboard")
+  // The previous redirect was from /dashboard to /, I should remove that.
+
+  // List of public routes that don't require authentication
+  const publicRoutes = ['/login', '/signup', '/reset-password', '/api/auth/callback']
+  const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+
+  // Protect all routes except public ones
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

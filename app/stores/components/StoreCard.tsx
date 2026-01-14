@@ -14,7 +14,7 @@ interface StoreCardProps {
 export function StoreCard({ store }: StoreCardProps) {
   return (
     <Link
-      href={`/dashboard/stores/${store.store_id}`}
+      href={`/stores/${store.store_id}`}
       className="group block rounded-xl border border-border bg-card overflow-hidden transition-all card-hover"
     >
       {/* Store Image */}
