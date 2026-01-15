@@ -1,24 +1,24 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import {
-  ArrowLeft,
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Package, Receipt, History } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import InventoryMonitor from "../components/inventory/InventoryMonitor";
+import StoreOverview from "../components/StoreOverview";
+import StoreExpenses from "../components/StoreExpenses";
+import StoreTransactions from "../components/StoreTransactions";
 
 import { useStore } from "../hooks/useStore";
 import { useStoreStats } from "../hooks/useStoreStats";
 
+type Tab = "overview" | "inventory" | "expenses" | "transactions";
+
 export default function StoreDashboardPage() {
   const params = useParams();
   const storeId = params.id as string;
+  const [activeTab, setActiveTab] = useState<Tab>("overview");
 
   const { data: store, isLoading: storeLoading } = useStore(storeId);
   const { data: stats, isLoading: statsLoading } = useStoreStats(storeId);
@@ -36,6 +36,29 @@ export default function StoreDashboardPage() {
   if (!store || !stats) {
     return <div className="p-8 text-center">Store not found</div>;
   }
+
+  const tabs = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: LayoutDashboard,
+    },
+    {
+      id: "inventory",
+      label: "Inventory",
+      icon: Package,
+    },
+    {
+      id: "transactions",
+      label: "Transactions",
+      icon: History,
+    },
+    {
+      id: "expenses",
+      label: "Expenses",
+      icon: Receipt,
+    },
+  ] as const;
 
   return (
     <div className="space-y-6 animate-in duration-500 fade-in">
@@ -55,86 +78,40 @@ export default function StoreDashboardPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="gap-4 grid sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Cash on Hand"
-          value={stats.cash_on_hand}
-          icon={Wallet}
-          description="Categorized Balance"
-          trend="neutral"
-        />
-        <StatCard
-          title="Daily Gross"
-          value={stats.daily_gross_income}
-          icon={TrendingUp}
-          description="Today's Sales"
-          trend="positive"
-        />
-        <StatCard
-          title="Daily Expenses"
-          value={stats.daily_expenses}
-          icon={TrendingDown}
-          description="Today's Costs"
-          trend="negative"
-        />
-        <StatCard
-          title="Monthly Gross"
-          value={stats.monthly_gross_income}
-          icon={Calendar}
-          description="Current Month"
-          trend="positive"
-        />
+      {/* Custom Tabs Navigation */}
+      <div className="border-b">
+        <div className="flex gap-6">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as Tab)}
+                className={cn(
+                  "flex items-center gap-2 pb-3 text-sm font-medium transition-all relative",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+                {isActive && (
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Inventory Section */}
-      <InventoryMonitor storeId={storeId} />
-
-      {/* Placeholder for future sections (Charts/Tables) */}
-      <div className="bg-card p-8 border border-border rounded-xl text-muted-foreground text-center">
-        <p>Transaction history and charts will appear here.</p>
-      </div>
-    </div>
-  );
-}
-
-// Sub-component for clean cards
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  description,
-  trend,
-}: {
-  title: string;
-  value: number;
-  icon: LucideIcon;
-  description: string;
-  trend: "positive" | "negative" | "neutral";
-}) {
-  const formatter = new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  });
-
-  return (
-    <div className="bg-card shadow-sm p-6 border border-border rounded-xl">
-      <div className="flex justify-between items-center space-y-0 pb-2">
-        <p className="font-medium text-muted-foreground text-sm">{title}</p>
-        <Icon
-          className={cn(
-            "w-4 h-4",
-            trend === "positive"
-              ? "text-green-500"
-              : trend === "negative"
-              ? "text-red-500"
-              : "text-blue-500"
-          )}
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <h3 className="font-bold text-2xl">{formatter.format(value)}</h3>
-        <p className="text-muted-foreground text-xs">{description}</p>
+      {/* Tab Content */}
+      <div className="mt-6">
+        {activeTab === "overview" && <StoreOverview stats={stats} />}
+        {activeTab === "inventory" && <InventoryMonitor storeId={storeId} />}
+        {activeTab === "transactions" && <StoreTransactions storeId={storeId} />}
+        {activeTab === "expenses" && <StoreExpenses />}
       </div>
     </div>
   );

@@ -9,16 +9,17 @@ export interface DashboardStats {
   staffTrend: number
 }
 
-export async function getDashboardStats(supabase: SupabaseClient): Promise<DashboardStats> {
-  // Get total revenue from transactions (this month)
-  const startOfMonth = new Date()
-  startOfMonth.setDate(1)
-  startOfMonth.setHours(0, 0, 0, 0)
-
+export async function getDashboardStats(
+  supabase: SupabaseClient,
+  startDate: Date,
+  endDate: Date
+): Promise<DashboardStats> {
+  // Get total revenue from transactions (within date range)
   const { data: revenueData } = await supabase
     .from('transactions')
     .select('total_price')
-    .gte('transaction_time', startOfMonth.toISOString())
+    .gte('transaction_time', startDate.toISOString())
+    .lte('transaction_time', endDate.toISOString())
 
   const totalRevenue = revenueData?.reduce((sum, t) => sum + (t.total_price || 0), 0) || 0
 
@@ -32,19 +33,18 @@ export async function getDashboardStats(supabase: SupabaseClient): Promise<Dashb
     .from('stores')
     .select('*', { count: 'exact', head: true })
 
-  // Get pending transactions (today's transactions as a proxy)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const { count: todayTransactions } = await supabase
+  // Get transactions count (within date range)
+  const { count: periodTransactions } = await supabase
     .from('transactions')
     .select('*', { count: 'exact', head: true })
-    .gte('transaction_time', today.toISOString())
+    .gte('transaction_time', startDate.toISOString())
+    .lte('transaction_time', endDate.toISOString())
 
   return {
     totalRevenue,
     activeStaff: staffCount || 0,
     totalStores: storeCount || 0,
-    pendingTransactions: todayTransactions || 0,
+    pendingTransactions: periodTransactions || 0,
     revenueTrend: 12.5, // Mock trend data
     staffTrend: 8.2,
   }

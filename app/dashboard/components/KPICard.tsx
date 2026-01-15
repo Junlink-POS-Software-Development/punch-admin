@@ -13,6 +13,7 @@ interface KPICardProps {
   }
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'destructive'
   format?: 'number' | 'currency' | 'compact'
+  action?: React.ReactNode
 }
 
 const variantStyles = {
@@ -39,6 +40,7 @@ export function KPICard({
   trend,
   variant = 'default',
   format = 'number',
+  action,
 }: KPICardProps) {
   const formattedValue = 
     format === 'currency' ? formatCurrency(value) :
@@ -72,11 +74,14 @@ export function KPICard({
             </div>
           )}
         </div>
-        <div className={cn(
-          'flex h-12 w-12 items-center justify-center rounded-xl',
-          iconStyles[variant]
-        )}>
-          <Icon className="h-6 w-6" />
+        <div className="flex items-start gap-2">
+          {action && <div className="mt-1">{action}</div>}
+          <div className={cn(
+            'flex h-12 w-12 items-center justify-center rounded-xl shrink-0',
+            iconStyles[variant]
+          )}>
+            <Icon className="h-6 w-6" />
+          </div>
         </div>
       </div>
     </div>

@@ -219,6 +219,7 @@ export async function getStoreInventory(supabase: SupabaseClient, storeId: strin
     .select('*')
     .eq('store_id', storeId)
     .order('item_name', { ascending: true })
+    .limit(100)
 
   if (error) {
     console.error('Error fetching store inventory:', error)

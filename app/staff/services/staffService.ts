@@ -13,6 +13,7 @@ export async function getStaff(supabase: SupabaseClient): Promise<StaffWithStore
       stores (store_id, store_name)
     `)
     .order('first_name')
+    .limit(100)
 
   if (error) throw error
   return data || []

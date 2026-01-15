@@ -1,17 +1,17 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import type { Transaction, Store } from '@/lib/types/database'
+import type { Payment, Store } from '@/lib/types/database'
 
-export interface TransactionWithStore extends Transaction {
+export interface PaymentWithStore extends Payment {
   stores?: { store_name: string } | null
 }
 
-export async function getTransactions(
+export async function getPayments(
   supabase: SupabaseClient,
   dateRange: string,
   storeId?: string
-): Promise<TransactionWithStore[]> {
+): Promise<PaymentWithStore[]> {
   let query = supabase
-    .from('transactions')
+    .from('payments')
     .select(`
       *,
       stores (store_name)
@@ -43,16 +43,6 @@ export async function getTransactions(
   }
 
   const { data, error } = await query
-  if (error) throw error
-  return data || []
-}
-
-export async function getStores(supabase: SupabaseClient): Promise<Store[]> {
-  const { data, error } = await supabase
-    .from('stores')
-    .select('*')
-    .order('store_name')
-
   if (error) throw error
   return data || []
 }

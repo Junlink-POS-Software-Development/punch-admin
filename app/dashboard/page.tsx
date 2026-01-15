@@ -8,6 +8,8 @@ import { DollarSign, Users, Store, Clock } from 'lucide-react'
 
 import { useDashboardStats } from './hooks/useDashboardStats'
 
+import { Calendar } from './components/Calendar'
+
 export default function DashboardPage() {
   const { data: stats = {
     totalRevenue: 0,
@@ -21,23 +23,26 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back! Here's an overview of your POS system.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back! Here's an overview of your POS system.
+          </p>
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title="Monthly Revenue"
+          title="Revenue"
           value={stats.totalRevenue}
           icon={DollarSign}
           variant="primary"
           format="currency"
           trend={{ value: stats.revenueTrend, isPositive: true }}
-          subtitle="vs last month"
+          subtitle="in selected period"
+          action={<Calendar />}
         />
         <KPICard
           title="Active Staff"
@@ -56,12 +61,12 @@ export default function DashboardPage() {
           format="number"
         />
         <KPICard
-          title="Today's Transactions"
+          title="Transactions"
           value={stats.pendingTransactions}
           icon={Clock}
           variant="default"
           format="number"
-          subtitle="transactions today"
+          subtitle="in selected period"
         />
       </div>
 
