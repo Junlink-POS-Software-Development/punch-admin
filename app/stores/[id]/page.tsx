@@ -1,14 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
-import {
-  getStoreById,
-  getStoreStats,
-  type Store,
-  type StoreDashboardStats,
-} from "../services/storeService";
 import {
   ArrowLeft,
   Wallet,
@@ -21,36 +13,17 @@ import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import InventoryMonitor from "../components/inventory/InventoryMonitor";
 
+import { useStore } from "../hooks/useStore";
+import { useStoreStats } from "../hooks/useStoreStats";
+
 export default function StoreDashboardPage() {
   const params = useParams();
   const storeId = params.id as string;
-  const supabase = createClient();
 
-  const [store, setStore] = useState<Store | null>(null);
-  const [stats, setStats] = useState<StoreDashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: store, isLoading: storeLoading } = useStore(storeId);
+  const { data: stats, isLoading: statsLoading } = useStoreStats(storeId);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!storeId) return;
-
-      try {
-        // Fetch both store details and stats in parallel
-        const [storeData, statsData] = await Promise.all([
-          getStoreById(supabase, storeId),
-          getStoreStats(supabase, storeId),
-        ]);
-
-        setStore(storeData);
-        setStats(statsData);
-      } catch (error) {
-        console.error("Failed to load dashboard:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, [storeId, supabase]);
+  const loading = storeLoading || statsLoading;
 
   if (loading) {
     return (

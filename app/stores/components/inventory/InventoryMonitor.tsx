@@ -1,42 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { getStoreInventory, type InventoryItem } from "../../services/storeService";
+import { Package, RefreshCw } from "lucide-react";
 import InventoryTable from "./InventoryTable";
 import StockSummary from "./StockSummary";
-import { Package, RefreshCw } from "lucide-react";
 
 interface InventoryMonitorProps {
   storeId: string;
 }
 
+import { useStoreInventory } from "../../hooks/useStoreInventory";
+
 export default function InventoryMonitor({ storeId }: InventoryMonitorProps) {
-  const supabase = createClient();
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const loadInventory = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-
-    try {
-      const data = await getStoreInventory(supabase, storeId);
-      setItems(data);
-    } catch (error) {
-      console.error("Failed to load inventory:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (storeId) {
-      loadInventory();
-    }
-  }, [storeId]);
+  const { data: items = [], isLoading: loading, isFetching: refreshing, refetch } = useStoreInventory(storeId);
 
   if (loading) {
     return (
@@ -55,7 +30,7 @@ export default function InventoryMonitor({ storeId }: InventoryMonitorProps) {
           <h2 className="font-bold text-xl">Inventory Monitoring</h2>
         </div>
         <button
-          onClick={() => loadInventory(true)}
+          onClick={() => refetch()}
           disabled={refreshing}
           className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-secondary hover:bg-secondary/80 rounded-lg transition-colors disabled:opacity-50"
         >

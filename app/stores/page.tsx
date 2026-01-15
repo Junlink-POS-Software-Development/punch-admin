@@ -1,54 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 import { StoreCard } from './components/StoreCard'
 import { CreateStoreCard } from './components/CreateStoreCard'
 import { Store, Search } from 'lucide-react'
 import type { StoreWithStaffCount } from '@/lib/types/database'
 
+import { useStores } from './hooks/useStores'
+
 export default function StoresPage() {
-  const [stores, setStores] = useState<StoreWithStaffCount[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: stores = [], isLoading: loading, error } = useStores()
   const [searchQuery, setSearchQuery] = useState('')
-  const supabase = createClient()
 
-  useEffect(() => {
-    async function fetchStores() {
-      try {
-        // Fetch stores
-        const { data: storesData, error } = await supabase
-          .from('stores')
-          .select('*')
-          .order('store_name')
-
-        if (error) throw error
-
-        // Get staff counts for each store
-        const storesWithCounts: StoreWithStaffCount[] = await Promise.all(
-          (storesData || []).map(async (store) => {
-            const { count } = await supabase
-              .from('members')
-              .select('*', { count: 'exact', head: true })
-              .eq('store_id', store.store_id)
-
-            return {
-              ...store,
-              staff_count: count || 0,
-            }
-          })
-        )
-
-        setStores(storesWithCounts)
-      } catch (error) {
-        console.error('Failed to fetch stores:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStores()
-  }, [supabase])
+  if (error) {
+    console.error('Failed to fetch stores:', error)
+  }
 
   const filteredStores = stores.filter((store) =>
     store.store_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

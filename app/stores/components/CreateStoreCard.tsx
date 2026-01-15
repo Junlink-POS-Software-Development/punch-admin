@@ -1,14 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { createStore, uploadStoreImage } from '../services/storeService'
 import { Plus, Store as StoreIcon, Upload, X, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
+import { useCreateStore } from '../hooks/useCreateStore'
 
 export function CreateStoreCard() {
   const [isOpen, setIsOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     store_name: '',
     street: '',
@@ -20,7 +17,9 @@ export function CreateStoreCard() {
   })
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const supabase = createClient()
+
+  const createStoreMutation = useCreateStore()
+  const loading = createStoreMutation.isPending
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -36,49 +35,39 @@ export function CreateStoreCard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
-    try {
-      let store_img = undefined
-      if (image) {
-        store_img = await uploadStoreImage(supabase, image)
+    createStoreMutation.mutate({
+      store_name: formData.store_name,
+      address: {
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        postal_code: formData.postal_code,
+        country: formData.country,
+      },
+      enrollment_id: formData.enrollment_id,
+      image,
+    }, {
+      onSuccess: () => {
+        // Reset form and close
+        setFormData({
+          store_name: '',
+          street: '',
+          city: '',
+          state: '',
+          postal_code: '',
+          country: 'Philippines',
+          enrollment_id: '',
+        })
+        setImage(null)
+        setImagePreview(null)
+        setIsOpen(false)
+      },
+      onError: (error) => {
+        console.error('Failed to create store:', error)
+        alert('Failed to create store. Please try again.')
       }
-
-      await createStore(supabase, {
-        store_name: formData.store_name,
-        address: {
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          postal_code: formData.postal_code,
-          country: formData.country,
-        },
-        enrollment_id: formData.enrollment_id,
-        store_img,
-      })
-
-      // Reset form and close
-      setFormData({
-        store_name: '',
-        street: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        country: 'Philippines',
-        enrollment_id: '',
-      })
-      setImage(null)
-      setImagePreview(null)
-      setIsOpen(false)
-      
-      // Refresh page to show new store
-      window.location.reload()
-    } catch (error) {
-      console.error('Failed to create store:', error)
-      alert('Failed to create store. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   if (!isOpen) {

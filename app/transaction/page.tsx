@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Search, Receipt, Calendar, Filter, ArrowUpDown } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Search, Receipt, ArrowUpDown } from 'lucide-react'
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters'
 import { cn } from '@/lib/utils/cn'
-import Link from 'next/link'
+
 import type { Transaction, Store } from '@/lib/types/database'
 import {
   useReactTable,
@@ -17,76 +16,23 @@ import {
   SortingState,
 } from '@tanstack/react-table'
 
-interface TransactionWithStore extends Transaction {
-  stores?: { store_name: string } | null
-}
 
 const columnHelper = createColumnHelper<TransactionWithStore>()
 
+import { useTransactions } from './hooks/useTransactions'
+import { useTransactionStores } from './hooks/useTransactionStores'
+import type { TransactionWithStore } from './services/transactionService'
+
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<TransactionWithStore[]>([])
-  const [stores, setStores] = useState<Store[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStore, setSelectedStore] = useState<string>('')
   const [dateRange, setDateRange] = useState<string>('all')
   const [sorting, setSorting] = useState<SortingState>([])
-  const supabase = createClient()
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch stores for filter
-        const { data: storesData } = await supabase
-          .from('stores')
-          .select('*')
-          .order('store_name')
+  const { data: transactions = [], isLoading: transactionsLoading } = useTransactions(dateRange)
+  const { data: stores = [], isLoading: storesLoading } = useTransactionStores()
 
-        setStores(storesData || [])
-
-        // Build query
-        let query = supabase
-          .from('transactions')
-          .select(`
-            *,
-            stores (store_name)
-          `)
-          .order('transaction_time', { ascending: false })
-          .limit(100)
-
-        // Apply date filter
-        if (dateRange !== 'all') {
-          const now = new Date()
-          let startDate = new Date()
-          
-          switch (dateRange) {
-            case 'today':
-              startDate.setHours(0, 0, 0, 0)
-              break
-            case 'week':
-              startDate.setDate(now.getDate() - 7)
-              break
-            case 'month':
-              startDate.setMonth(now.getMonth() - 1)
-              break
-          }
-          
-          query = query.gte('transaction_time', startDate.toISOString())
-        }
-
-        const { data, error } = await query
-
-        if (error) throw error
-        setTransactions(data || [])
-      } catch (error) {
-        console.error('Failed to fetch transactions:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [supabase, dateRange])
+  const loading = transactionsLoading || storesLoading
 
   const columns = useMemo(
     () => [

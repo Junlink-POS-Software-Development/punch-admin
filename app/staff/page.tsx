@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Search, Users, Filter, MoreHorizontal, ArrowUpDown } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Search, Users, MoreHorizontal, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import Link from 'next/link'
 import type { Staff, Store } from '@/lib/types/database'
@@ -16,52 +15,21 @@ import {
   SortingState,
 } from '@tanstack/react-table'
 
-interface StaffWithStore extends Staff {
-  stores?: Store | null
-}
 
 const columnHelper = createColumnHelper<StaffWithStore>()
 
+import { useStaff } from './hooks/useStaff'
+import { useStaffStores } from './hooks/useStaffStores'
+import type { StaffWithStore } from './services/staffService'
+
 export default function StaffPage() {
-  const [staff, setStaff] = useState<StaffWithStore[]>([])
-  const [stores, setStores] = useState<Store[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: staff = [], isLoading: staffLoading } = useStaff()
+  const { data: stores = [], isLoading: storesLoading } = useStaffStores()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStore, setSelectedStore] = useState<string>('')
   const [sorting, setSorting] = useState<SortingState>([])
-  const supabase = createClient()
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch stores for filter
-        const { data: storesData } = await supabase
-          .from('stores')
-          .select('*')
-          .order('store_name')
-
-        setStores(storesData || [])
-
-        // Fetch staff with store info
-        const { data: staffData, error } = await supabase
-          .from('members')
-          .select(`
-            *,
-            stores (store_id, store_name)
-          `)
-          .order('first_name')
-
-        if (error) throw error
-        setStaff(staffData || [])
-      } catch (error) {
-        console.error('Failed to fetch staff:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [supabase])
+  const loading = staffLoading || storesLoading
 
   const columns = useMemo(
     () => [

@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "Admin dashboard for managing POS system, members, stores, and transactions",
 };
 
+import QueryProvider from "@/components/providers/QueryProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,9 +30,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppShell>
-          {children}
-        </AppShell>
+        <QueryProvider>
+          <AppShell>
+            {children}
+          </AppShell>
+        </QueryProvider>
       </body>
     </html>
   );
