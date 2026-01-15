@@ -1,9 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Filter, Shield, User, Settings, Database } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Search, Filter, Shield, User, Settings, Database, ArrowUpDown } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils/formatters'
 import { cn } from '@/lib/utils/cn'
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  createColumnHelper,
+  SortingState,
+} from '@tanstack/react-table'
 
 // Mock audit log data
 const mockLogs = [
@@ -31,17 +40,110 @@ const typeColors: Record<string, string> = {
   transaction: 'bg-destructive/10 text-destructive',
 }
 
+interface AuditLog {
+  id: string
+  action: string
+  user: string
+  type: string
+  timestamp: string
+  ip: string
+}
+
+const columnHelper = createColumnHelper<AuditLog>()
+
 export default function AuditLogsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState<string>('')
-  const [logs] = useState(mockLogs)
+  const [sorting, setSorting] = useState<SortingState>([])
 
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch = 
-      log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.user.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = !selectedType || log.type === selectedType
-    return matchesSearch && matchesType
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('action', {
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Action <ArrowUpDown className="w-3 h-3" />
+          </div>
+        ),
+        cell: (info) => {
+          const log = info.row.original
+          const Icon = typeIcons[log.type] || Shield
+          return (
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg',
+                typeColors[log.type]
+              )}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <span className="font-medium text-foreground">{info.getValue()}</span>
+            </div>
+          )
+        },
+      }),
+      columnHelper.accessor('user', {
+        header: 'User',
+        cell: (info) => <span className="text-sm text-muted-foreground">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('type', {
+        header: 'Type',
+        cell: (info) => (
+          <span className={cn(
+            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+            typeColors[info.getValue()]
+          )}>
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('ip', {
+        header: 'IP Address',
+        cell: (info) => <span className="text-sm text-muted-foreground font-mono">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('timestamp', {
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Timestamp <ArrowUpDown className="w-3 h-3" />
+          </div>
+        ),
+        cell: (info) => <span className="text-sm text-muted-foreground">{formatDateTime(info.getValue())}</span>,
+      }),
+    ],
+    []
+  )
+
+  const filteredData = useMemo(() => {
+    return mockLogs.filter((log) => {
+      const matchesType = !selectedType || log.type === selectedType
+      return matchesType
+    })
+  }, [selectedType])
+
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    state: {
+      sorting,
+      globalFilter: searchQuery,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setSearchQuery,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: (row, columnId, filterValue) => {
+      const log = row.original
+      const search = filterValue.toLowerCase()
+      return (
+        log.action.toLowerCase().includes(search) ||
+        log.user.toLowerCase().includes(search)
+      )
+    },
   })
 
   return (
@@ -85,60 +187,28 @@ export default function AuditLogsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Action
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  IP Address
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Timestamp
-                </th>
-              </tr>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id} className="border-b border-border bg-muted/50">
+                  {headerGroup.headers.map((header) => (
+                    <th key={header.id} className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredLogs.map((log) => {
-                const Icon = typeIcons[log.type] || Shield
-                return (
-                  <tr key={log.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          'flex h-8 w-8 items-center justify-center rounded-lg',
-                          typeColors[log.type]
-                        )}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <span className="font-medium text-foreground">{log.action}</span>
-                      </div>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-muted/50 transition-colors">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-6 py-4">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
-                      {log.user}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={cn(
-                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
-                        typeColors[log.type]
-                      )}>
-                        {log.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground font-mono">
-                      {log.ip}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
-                      {formatDateTime(log.timestamp)}
-                    </td>
-                  </tr>
-                )
-              })}
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

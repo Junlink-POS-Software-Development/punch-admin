@@ -1,41 +1,127 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { InventoryItem } from "../../services/storeService";
-import { Search, ArrowUpDown, AlertTriangle } from "lucide-react";
+import { Search, ArrowUpDown, AlertTriangle, Package, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  createColumnHelper,
+  SortingState,
+} from "@tanstack/react-table";
 
 interface InventoryTableProps {
   items: InventoryItem[];
 }
 
+const columnHelper = createColumnHelper<InventoryItem>();
+
 export default function InventoryTable({ items }: InventoryTableProps) {
-  const [search, setSearch] = useState("");
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof InventoryItem;
-    direction: "asc" | "desc";
-  } | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
 
-  const filteredItems = items
-    .filter((item) =>
-      item.item_name.toLowerCase().includes(search.toLowerCase()) ||
-      item.sku.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (!sortConfig) return 0;
-      const { key, direction } = sortConfig;
-      if (a[key]! < b[key]!) return direction === "asc" ? -1 : 1;
-      if (a[key]! > b[key]!) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("item_name", {
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Item Name <ArrowUpDown className="w-3 h-3" />
+          </div>
+        ),
+        cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor("sku", {
+        header: "SKU",
+        cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor("category", {
+        header: "Category",
+        cell: (info) => (
+          <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded-md text-xs">
+            {info.getValue() || "Uncategorized"}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("current_stock", {
+        header: ({ column }) => (
+          <div
+            className="flex items-center justify-end gap-2 cursor-pointer hover:text-foreground transition-colors"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Stock <ArrowUpDown className="w-3 h-3" />
+          </div>
+        ),
+        cell: (info) => {
+          const item = info.row.original;
+          const isLowStock = item.stock_status === "low_stock";
+          const isOutOfStock = item.stock_status === "out_of_stock";
+          return (
+            <div className={cn(
+              "text-right font-bold tabular-nums",
+              isOutOfStock ? "text-red-600" : isLowStock ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
+            )}>
+              {info.getValue()}
+            </div>
+          );
+        },
+      }),
+      columnHelper.accessor("stock_status", {
+        header: () => <div className="text-right">Status</div>,
+        cell: (info) => {
+          const status = info.getValue();
+          const isOutOfStock = status === "out_of_stock";
+          const isLowStock = status === "low_stock";
 
-  const handleSort = (key: keyof InventoryItem) => {
-    let direction: "asc" | "desc" = "asc";
-    if (sortConfig?.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
+          return (
+            <div className="flex justify-end">
+              {isOutOfStock ? (
+                <div className="flex items-center gap-1 text-red-600 text-xs font-bold uppercase tracking-tight">
+                  <AlertTriangle className="w-3 h-3" />
+                  Out of Stock
+                </div>
+              ) : isLowStock ? (
+                <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-tight">
+                  <AlertTriangle className="w-3 h-3" />
+                  Low Stock
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-tight">
+                  <Package className="w-3 h-3" />
+                  Healthy
+                </div>
+              )}
+            </div>
+          );
+        },
+      }),
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data: items,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: (row, columnId, filterValue) => {
+      const value = row.getValue(columnId) as string;
+      return value?.toLowerCase().includes(filterValue.toLowerCase());
+    },
+  });
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -47,8 +133,8 @@ export default function InventoryTable({ items }: InventoryTableProps) {
             type="text"
             placeholder="Search items or SKU..."
             className="w-full pl-9 pr-4 py-2 bg-muted border-none rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={globalFilter ?? ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
           />
         </div>
       </div>
@@ -56,63 +142,32 @@ export default function InventoryTable({ items }: InventoryTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
           <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
-            <tr>
-              <th className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors" onClick={() => handleSort("item_name")}>
-                <div className="flex items-center gap-2">
-                  Item Name <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </th>
-              <th className="px-6 py-3">SKU</th>
-              <th className="px-6 py-3">Category</th>
-              <th className="px-6 py-3 cursor-pointer hover:text-foreground transition-colors text-right" onClick={() => handleSort("current_stock")}>
-                <div className="flex items-center justify-end gap-2">
-                  Stock <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </th>
-              <th className="px-6 py-3 text-right">Status</th>
-            </tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className="px-6 py-3">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody className="divide-y divide-border">
-            {filteredItems.length > 0 ? (
-              filteredItems.map((item) => {
-                const isLowStock = item.stock_status === "low_stock";
-                const isOutOfStock = item.stock_status === "out_of_stock";
-                return (
-                  <tr key={item.item_id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4 font-medium text-foreground">{item.item_name}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{item.sku}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded-md text-xs">
-                        {item.category || "Uncategorized"}
-                      </span>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-muted/30 transition-colors">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-6 py-4">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
-                    <td className={cn(
-                      "px-6 py-4 text-right font-semibold",
-                      isOutOfStock ? "text-red-600" : isLowStock ? "text-orange-500" : "text-foreground"
-                    )}>
-                      {item.current_stock}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      {isOutOfStock ? (
-                        <div className="flex items-center justify-end gap-1 text-red-600 text-xs font-medium">
-                          <AlertTriangle className="w-3 h-3" />
-                          Out of Stock
-                        </div>
-                      ) : isLowStock ? (
-                        <div className="flex items-center justify-end gap-1 text-orange-500 text-xs font-medium">
-                          <AlertTriangle className="w-3 h-3" />
-                          Low Stock
-                        </div>
-                      ) : (
-                        <span className="text-green-500 text-xs font-medium">Healthy</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
+                  ))}
+                </tr>
+              ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
+                <td colSpan={columns.length} className="px-6 py-8 text-center text-muted-foreground">
                   No items found matching your search.
                 </td>
               </tr>

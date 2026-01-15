@@ -214,24 +214,11 @@ export async function getStoreStats(supabase: SupabaseClient, storeId: string): 
  * Fetch store inventory from the inventory_monitor_view
  */
 export async function getStoreInventory(supabase: SupabaseClient, storeId: string): Promise<InventoryItem[]> {
-  console.log('getStoreInventory called for storeId:', storeId);
-
-  // DEBUG: Check if we can fetch from items table directly
-  const { data: itemsData, error: itemsError } = await supabase
-    .from('items')
-    .select('*')
-    .eq('store_id', storeId)
-    .limit(5);
-  
-  console.log('DEBUG: Direct fetch from items table:', { itemsData, itemsError });
-
   const { data, error } = await supabase
     .from('inventory_monitor_view')
     .select('*')
     .eq('store_id', storeId)
     .order('item_name', { ascending: true })
-
-  console.log('DEBUG: Fetch from inventory_monitor_view:', { data, error });
 
   if (error) {
     console.error('Error fetching store inventory:', error)

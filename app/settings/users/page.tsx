@@ -1,8 +1,17 @@
 'use client'
 
-import { useState } from 'react'
-import { User, Shield, MoreHorizontal, UserPlus, Search } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { User, Shield, MoreHorizontal, UserPlus, Search, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  createColumnHelper,
+  SortingState,
+} from '@tanstack/react-table'
 
 // Mock user data
 const mockUsers = [
@@ -18,15 +27,111 @@ const roleColors: Record<string, string> = {
   member: 'bg-success/10 text-success',
 }
 
+interface UserData {
+  id: string
+  name: string
+  email: string
+  role: string
+  status: string
+}
+
+const columnHelper = createColumnHelper<UserData>()
+
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [users] = useState(mockUsers)
+  const [sorting, setSorting] = useState<SortingState>([])
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('name', {
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            User <ArrowUpDown className="w-3 h-3" />
+          </div>
+        ),
+        cell: (info) => {
+          const user = info.row.original
+          return (
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                {user.name.charAt(0)}
+              </div>
+              <div>
+                <p className="font-medium text-foreground">{user.name}</p>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
+          )
+        },
+      }),
+      columnHelper.accessor('role', {
+        header: 'Role',
+        cell: (info) => (
+          <span className={cn(
+            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
+            roleColors[info.getValue()]
+          )}>
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('status', {
+        header: 'Status',
+        cell: (info) => {
+          const status = info.getValue()
+          return (
+            <span className={cn(
+              'inline-flex items-center gap-1.5 text-sm capitalize',
+              status === 'active' ? 'text-success' : 'text-muted-foreground'
+            )}>
+              <span className={cn(
+                'h-2 w-2 rounded-full',
+                status === 'active' ? 'bg-success' : 'bg-muted-foreground'
+              )} />
+              {status}
+            </span>
+          )
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        cell: () => (
+          <div className="text-right">
+            <button className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </div>
+        ),
+      }),
+    ],
+    []
   )
+
+  const table = useReactTable({
+    data: mockUsers,
+    columns,
+    state: {
+      sorting,
+      globalFilter: searchQuery,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setSearchQuery,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: (row, columnId, filterValue) => {
+      const user = row.original
+      const search = filterValue.toLowerCase()
+      return (
+        user.name.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search)
+      )
+    },
+  })
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -61,60 +166,26 @@ export default function UsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id} className="border-b border-border bg-muted/50">
+                  {headerGroup.headers.map((header) => (
+                    <th key={header.id} className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-                        {user.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{user.name}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={cn(
-                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
-                      roleColors[user.role]
-                    )}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={cn(
-                      'inline-flex items-center gap-1.5 text-sm capitalize',
-                      user.status === 'active' ? 'text-success' : 'text-muted-foreground'
-                    )}>
-                      <span className={cn(
-                        'h-2 w-2 rounded-full',
-                        user.status === 'active' ? 'bg-success' : 'bg-muted-foreground'
-                      )} />
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </td>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-muted/50 transition-colors">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-6 py-4">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
