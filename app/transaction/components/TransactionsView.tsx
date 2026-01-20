@@ -74,6 +74,15 @@ export default function TransactionsView({ searchQuery, selectedStore, dateRange
           </span>
         ),
       }),
+      columnHelper.accessor((row) => row.payments?.customer_name, {
+        id: 'customer_name',
+        header: 'Customer',
+        cell: (info) => (
+          <span className="text-sm text-muted-foreground">
+            {info.getValue() || '-'}
+          </span>
+        ),
+      }),
       columnHelper.accessor('invoice_no', {
         header: 'Invoice',
         cell: (info) => (

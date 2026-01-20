@@ -25,7 +25,7 @@ export async function getDashboardStats(
 
   // Get staff count
   const { count: staffCount } = await supabase
-    .from('members')
+    .from('users')
     .select('*', { count: 'exact', head: true })
 
   // Get store count

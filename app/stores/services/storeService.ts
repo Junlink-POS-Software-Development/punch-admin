@@ -53,12 +53,12 @@ export async function getStoresWithStaffCount(supabase: SupabaseClient): Promise
   const storesWithCounts: StoreWithStaffCount[] = await Promise.all(
     storesData.map(async (store) => {
       const { count, error: countError } = await supabase
-        .from('members')
-        .select('*', { count: 'exact', head: true }) // 'head: true' fetches only the count
+        .from('users')
+        .select('user_id', { count: 'exact', head: true }) // 'head: true' fetches only the count
         .eq('store_id', store.store_id)
 
       if (countError) {
-        console.warn(`Could not fetch staff count for store ${store.store_id}`, countError)
+        console.warn(`Could not fetch staff count for store ${store.store_id}`, JSON.stringify(countError, null, 2))
       }
 
       return {
@@ -122,18 +122,17 @@ export async function createStore(
     throw error
   }
 
-  // 5. Add creator as a member (Owner)
-  const { error: memberError } = await supabase
-    .from('members')
-    .insert({
-      user_id: user.id,
+  // 5. Update creator's store_id and role
+  const { error: userError } = await supabase
+    .from('users')
+    .update({
       store_id: data.store_id,
-      email: user.email,
-      job_title: 'Owner',
+      role: 'owner'
     })
+    .eq('user_id', user.id)
 
-  if (memberError) {
-    console.error('Error adding creator to members:', memberError)
+  if (userError) {
+    console.error('Error updating creator user record:', userError)
   }
 
   return data as Store

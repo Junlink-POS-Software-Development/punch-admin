@@ -70,7 +70,7 @@ export default function StaffPage() {
           </span>
         ),
       }),
-      columnHelper.accessor('job_title', {
+      columnHelper.accessor('role', {
         header: 'Role',
         cell: (info) => <span className="text-sm text-muted-foreground">{info.getValue() || 'Staff'}</span>,
       }),

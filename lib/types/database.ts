@@ -23,10 +23,10 @@ export interface Staff {
   user_id: string
   first_name: string | null
   last_name: string | null
-  job_title: string | null
+  role: string
   email: string | null
   avatar: string | null
-  store_id: string
+  store_id: string | null
 }
 
 export interface StoreAddress {
@@ -76,6 +76,7 @@ export interface Transaction {
   invoice_no: string | null
   transaction_time: string
   category_id: string | null
+  payment_id: string | null
 }
 
 export interface Payment {

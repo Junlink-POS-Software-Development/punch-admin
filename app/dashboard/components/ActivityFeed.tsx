@@ -48,16 +48,16 @@ export function ActivityFeed() {
 
         // Fetch recent staff additions
         const { data: staff } = await supabase
-          .from('members')
-          .select('user_id, first_name, last_name, created_at')
+          .from('staff_permissions')
+          .select('created_at, users (user_id, first_name, last_name)')
           .order('created_at', { ascending: false })
           .limit(3)
 
-        const staffActivities: Activity[] = (staff || []).map(s => ({
-          id: s.user_id,
+        const staffActivities: Activity[] = (staff || []).map((s: any) => ({
+          id: s.users?.user_id,
           type: 'staff',
           title: 'New Staff Member',
-          description: `${s.first_name} ${s.last_name} joined the team`,
+          description: `${s.users?.first_name} ${s.users?.last_name} joined the team`,
           timestamp: s.created_at || new Date().toISOString(),
           status: 'info'
         }))

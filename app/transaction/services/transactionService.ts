@@ -1,8 +1,9 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import type { Transaction, Store } from '@/lib/types/database'
+import type { Transaction, Store, Payment } from '@/lib/types/database'
 
 export interface TransactionWithStore extends Transaction {
   stores?: { store_name: string } | null
+  payments?: Payment | null
 }
 
 export async function getTransactions(
@@ -14,7 +15,8 @@ export async function getTransactions(
     .from('transactions')
     .select(`
       *,
-      stores (store_name)
+      stores (store_name),
+      payments (*)
     `)
     .order('transaction_time', { ascending: false })
     .limit(100)

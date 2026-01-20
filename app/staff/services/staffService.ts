@@ -7,15 +7,18 @@ export interface StaffWithStore extends Staff {
 
 export async function getStaff(supabase: SupabaseClient): Promise<StaffWithStore[]> {
   const { data, error } = await supabase
-    .from('members')
+    .from('users')
     .select(`
       *,
-      stores (store_id, store_name)
+      stores!users_store_id_fkey (store_id, store_name)
     `)
     .order('first_name')
     .limit(100)
 
-  if (error) throw error
+  if (error) {
+    console.error('Error fetching staff:', error)
+    throw error
+  }
   return data || []
 }
 
