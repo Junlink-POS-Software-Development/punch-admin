@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Logo } from '@/components/Logo'
 import { 
   LayoutDashboard, 
   Users, 
@@ -10,8 +11,7 @@ import {
   BarChart3, 
   Settings,
   ChevronLeft,
-  ChevronRight,
-  Hexagon
+  ChevronRight
 } from 'lucide-react'
 import { useUIStore } from '@/app/dashboard/stores/uiStore'
 import { cn } from '@/lib/utils/cn'
@@ -39,8 +39,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Hexagon className="h-5 w-5 text-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl">
+            <Logo className="h-10 w-10 text-primary" />
           </div>
           {!sidebarCollapsed && (
             <span className="text-lg font-semibold text-foreground animate-fade-in">
