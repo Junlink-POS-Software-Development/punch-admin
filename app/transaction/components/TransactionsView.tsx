@@ -1,6 +1,7 @@
 'use client'
-
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useInView } from 'react-intersection-observer'
+import { Loader2 } from 'lucide-react'
 import { ArrowUpDown, Receipt } from 'lucide-react'
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters'
 import {
@@ -25,7 +26,25 @@ interface TransactionsViewProps {
 
 export default function TransactionsView({ searchQuery, selectedStore, dateRange }: TransactionsViewProps) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const { data: transactions = [], isLoading } = useTransactions(dateRange)
+  const { ref, inView } = useInView()
+  
+  const { 
+    data, 
+    isLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useTransactions(dateRange, selectedStore)
+
+  const transactions = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) || []
+  }, [data])
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage()
+    }
+  }, [inView, hasNextPage, fetchNextPage])
 
   const columns = useMemo(
     () => [
@@ -120,10 +139,11 @@ export default function TransactionsView({ searchQuery, selectedStore, dateRange
 
   const filteredData = useMemo(() => {
     return transactions.filter((tx) => {
-      const matchesStore = !selectedStore || tx.store_id === selectedStore
-      return matchesStore
+      // Client-side filtering for search query if needed, 
+      // but store filtering is now handled by the API
+      return true 
     })
-  }, [transactions, selectedStore])
+  }, [transactions])
 
   const table = useReactTable({
     data: filteredData,
@@ -198,6 +218,13 @@ export default function TransactionsView({ searchQuery, selectedStore, dateRange
           </tbody>
         </table>
       </div>
+
+      {(isFetchingNextPage || (isLoading && transactions.length > 0)) && (
+        <div className="py-4 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <div ref={ref} className="h-4" />
     </div>
   )
 }

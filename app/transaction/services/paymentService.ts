@@ -8,8 +8,10 @@ export interface PaymentWithStore extends Payment {
 export async function getPayments(
   supabase: SupabaseClient,
   dateRange: string,
-  storeId?: string
-): Promise<PaymentWithStore[]> {
+  storeId?: string,
+  page: number = 0,
+  limit: number = 20
+): Promise<{ data: PaymentWithStore[]; nextCursor: number | null }> {
   let query = supabase
     .from('payments')
     .select(`
@@ -17,7 +19,7 @@ export async function getPayments(
       stores (store_name)
     `)
     .order('transaction_time', { ascending: false })
-    .limit(100)
+    .range(page * limit, (page + 1) * limit - 1)
 
   if (storeId) {
     query = query.eq('store_id', storeId)
@@ -44,5 +46,9 @@ export async function getPayments(
 
   const { data, error } = await query
   if (error) throw error
-  return data || []
+
+  const hasMore = (data || []).length === limit
+  const nextCursor = hasMore ? page + 1 : null
+
+  return { data: data || [], nextCursor }
 }

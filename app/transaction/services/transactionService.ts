@@ -9,8 +9,10 @@ export interface TransactionWithStore extends Transaction {
 export async function getTransactions(
   supabase: SupabaseClient,
   dateRange: string,
-  storeId?: string
-): Promise<TransactionWithStore[]> {
+  storeId?: string,
+  page: number = 0,
+  limit: number = 20
+): Promise<{ data: TransactionWithStore[]; nextCursor: number | null }> {
   let query = supabase
     .from('transactions')
     .select(`
@@ -19,7 +21,7 @@ export async function getTransactions(
       payments (*)
     `)
     .order('transaction_time', { ascending: false })
-    .limit(100)
+    .range(page * limit, (page + 1) * limit - 1)
 
   if (storeId) {
     query = query.eq('store_id', storeId)
@@ -46,7 +48,11 @@ export async function getTransactions(
 
   const { data, error } = await query
   if (error) throw error
-  return data || []
+
+  const hasMore = (data || []).length === limit
+  const nextCursor = hasMore ? page + 1 : null
+
+  return { data: data || [], nextCursor }
 }
 
 export async function getStores(supabase: SupabaseClient): Promise<Store[]> {

@@ -1,6 +1,7 @@
 'use client'
-
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useInView } from 'react-intersection-observer'
+import { Loader2 } from 'lucide-react'
 import { ArrowUpDown, Receipt } from 'lucide-react'
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters'
 import {
@@ -25,7 +26,25 @@ interface PaymentsViewProps {
 
 export default function PaymentsView({ searchQuery, selectedStore, dateRange }: PaymentsViewProps) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const { data: payments = [], isLoading } = usePayments(dateRange)
+  const { ref, inView } = useInView()
+
+  const { 
+    data, 
+    isLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = usePayments(dateRange, selectedStore)
+
+  const payments = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) || []
+  }, [data])
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage()
+    }
+  }, [inView, hasNextPage, fetchNextPage])
 
   const columns = useMemo(
     () => [
@@ -97,10 +116,11 @@ export default function PaymentsView({ searchQuery, selectedStore, dateRange }: 
 
   const filteredData = useMemo(() => {
     return payments.filter((payment) => {
-      const matchesStore = !selectedStore || payment.store_id === selectedStore
-      return matchesStore
+      // Client-side filtering for search query if needed, 
+      // but store filtering is now handled by the API
+      return true 
     })
-  }, [payments, selectedStore])
+  }, [payments])
 
   const table = useReactTable({
     data: filteredData,
@@ -173,6 +193,12 @@ export default function PaymentsView({ searchQuery, selectedStore, dateRange }: 
           </tbody>
         </table>
       </div>
+      {(isFetchingNextPage || (isLoading && payments.length > 0)) && (
+        <div className="py-4 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <div ref={ref} className="h-4" />
     </div>
   )
 }
