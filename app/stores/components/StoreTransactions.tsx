@@ -27,10 +27,14 @@ export default function StoreTransactions({ storeId }: StoreTransactionsProps) {
   const [dateRange, setDateRange] = useState<string>("all");
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const { data: transactions = [], isLoading } = useTransactions(
+  const { data, isLoading } = useTransactions(
     dateRange,
     storeId
   );
+
+  const transactions = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) || [];
+  }, [data]);
 
   const columns = useMemo(
     () => [
