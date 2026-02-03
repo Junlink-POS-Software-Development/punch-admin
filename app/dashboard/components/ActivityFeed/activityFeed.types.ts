@@ -12,6 +12,6 @@ export interface Activity {
   status: ActivityStatus
 }
 
-export interface PaymentForActivity extends Pick<Payment, 'invoice_no' | 'customer_name' | 'grand_total' | 'transaction_time'> {
+export interface PaymentForActivity extends Pick<Payment, 'invoice_no' | 'customer_name' | 'amount_paid' | 'transaction_time'> {
   stores?: { store_name: string } | null
 }

@@ -57,7 +57,7 @@ export function Calendar() {
                   className={cn(
                     "w-full bg-background border border-input rounded-md px-3 py-2 text-sm",
                     "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
-                    "dark:[color-scheme:dark]"
+                    "dark:scheme-dark"
                   )}
                 />
               </div>
@@ -72,7 +72,7 @@ export function Calendar() {
                   className={cn(
                     "w-full bg-background border border-input rounded-md px-3 py-2 text-sm",
                     "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary",
-                    "dark:[color-scheme:dark]"
+                    "dark:scheme-dark"
                   )}
                 />
               </div>

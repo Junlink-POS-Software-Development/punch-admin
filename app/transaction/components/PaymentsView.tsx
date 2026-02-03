@@ -95,7 +95,7 @@ export default function PaymentsView({ searchQuery, selectedStore, dateRange }: 
           </span>
         ),
       }),
-      columnHelper.accessor('grand_total', {
+      columnHelper.accessor('amount_paid', {
         header: ({ column }) => (
           <div
             className="flex items-center justify-end gap-2 cursor-pointer hover:text-foreground transition-colors"

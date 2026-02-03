@@ -84,7 +84,7 @@ export interface Payment {
   customer_name: string | null
   amount_rendered: number | null
   voucher: number | null
-  grand_total: number | null
+  amount_paid: number | null
   change: number | null
   transaction_no: string | null
   transaction_time: string

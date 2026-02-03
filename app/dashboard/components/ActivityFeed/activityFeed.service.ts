@@ -6,7 +6,7 @@ export async function fetchRecentPayments(
 ): Promise<PaymentForActivity[]> {
   const { data, error } = await supabase
     .from('payments')
-    .select('invoice_no, customer_name, grand_total, transaction_time, stores (store_name)')
+    .select('invoice_no, customer_name, amount_paid, transaction_time, stores (store_name)')
     .order('transaction_time', { ascending: false })
     .limit(5)
 
@@ -26,7 +26,7 @@ export async function fetchRecentStaff(
   if (error) throw error
   
   return (data || []).map((s: any) => ({
-    user_id: s.users?.user_id,
+    user_id: s.users?.user_id || s.user_id,
     first_name: s.users?.first_name,
     last_name: s.users?.last_name,
     created_at: s.created_at || new Date().toISOString()
@@ -38,7 +38,7 @@ export function mapPaymentsToActivities(payments: PaymentForActivity[]): Activit
     id: p.invoice_no,
     type: 'payment',
     title: 'New Payment',
-    description: `${p.customer_name || 'Guest'} paid ₱${p.grand_total?.toLocaleString() || 0}`,
+    description: `${p.customer_name || 'Guest'} paid ₱${p.amount_paid?.toLocaleString() || 0}`,
     timestamp: p.transaction_time,
     status: 'success'
   }))

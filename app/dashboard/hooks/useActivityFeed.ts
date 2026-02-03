@@ -29,8 +29,8 @@ export function useActivityFeed() {
         const combined = combineAndSortActivities([...paymentActivities, ...staffActivities])
 
         setActivities(combined)
-      } catch (error) {
-        console.error('Failed to fetch activity:', error)
+      } catch (error: any) {
+        console.error('Failed to fetch activity:', error?.message || error)
       } finally {
         setLoading(false)
       }
