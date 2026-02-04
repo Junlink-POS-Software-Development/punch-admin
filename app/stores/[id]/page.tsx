@@ -27,48 +27,6 @@ export default function StoreDashboardPage() {
   const { data: store, isLoading: storeLoading } = useStore(storeId);
   const { data: stats, isLoading: statsLoading } = useStoreStats(storeId);
 
-  const loading = storeLoading || statsLoading;
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="border-primary border-b-2 rounded-full w-8 h-8 animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!store || !stats) {
-    return <div className="p-8 text-center">Store not found</div>;
-  }
-
-  const tabs = [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: LayoutDashboard,
-    },
-    {
-      id: "inventory",
-      label: "Inventory",
-      icon: Package,
-    },
-    {
-      id: "transactions",
-      label: "Transactions",
-      icon: History,
-    },
-    {
-      id: "expenses",
-      label: "Expenses",
-      icon: Receipt,
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: Settings,
-    },
-  ] as const;
-
   const queryClient = useQueryClient();
   const supabase = createClient();
 
@@ -101,6 +59,48 @@ export default function StoreDashboardPage() {
       alert(error.message || "Failed to restore store");
     },
   });
+
+  const tabs = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: LayoutDashboard,
+    },
+    {
+      id: "inventory",
+      label: "Inventory",
+      icon: Package,
+    },
+    {
+      id: "transactions",
+      label: "Transactions",
+      icon: History,
+    },
+    {
+      id: "expenses",
+      label: "Expenses",
+      icon: Receipt,
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: Settings,
+    },
+  ] as const;
+
+  const loading = storeLoading || statsLoading;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="border-primary border-b-2 rounded-full w-8 h-8 animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!store || !stats) {
+    return <div className="p-8 text-center">Store not found</div>;
+  }
 
   const isArchived = !!store.deleted_at;
 
