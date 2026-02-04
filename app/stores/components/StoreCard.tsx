@@ -27,7 +27,7 @@ export function StoreCard({ store }: StoreCardProps) {
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+          <div className="flex h-full items-center justify-center bg-linear-to-br from-primary/20 to-primary/5">
             <span className="text-4xl font-bold text-primary/40">
               {store.store_name?.charAt(0).toUpperCase() || 'S'}
             </span>
@@ -57,7 +57,7 @@ export function StoreCard({ store }: StoreCardProps) {
 
         {/* Address */}
         <div className="flex items-start gap-2 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
           <span className="line-clamp-2">
             {formatAddress(store.store_address as StoreAddress | null)}
           </span>

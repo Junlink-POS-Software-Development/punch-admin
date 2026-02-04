@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, Loader2, ShieldX } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -13,8 +13,20 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [memberDenied, setMemberDenied] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Check for member access denied reason in URL
+  useEffect(() => {
+    const reason = searchParams.get('reason');
+    if (reason === 'member_access_denied') {
+      setMemberDenied(true);
+      // Clean up the URL without triggering a navigation
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +111,22 @@ export default function LoginPage() {
               Sign in to your account to continue
             </p>
           </div>
+
+          {memberDenied && (
+            <div className="bg-amber-500/10 mb-6 px-4 py-4 border border-amber-500/30 rounded-lg animate-slide-in-up">
+              <div className="flex items-start gap-3">
+                <ShieldX className="mt-0.5 w-5 h-5 text-amber-500 shrink-0" />
+                <div>
+                  <h3 className="mb-1 font-semibold text-amber-600 dark:text-amber-400">
+                    Access Denied
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    Member accounts cannot access the Admin Dashboard. Please sign in with an Admin account or contact your store administrator for access.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             {error && (

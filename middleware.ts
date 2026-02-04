@@ -77,6 +77,26 @@ export async function middleware(request: NextRequest) {
         url.pathname = '/account-deleted'
         return NextResponse.redirect(url)
       }
+
+      // If user is a member (not admin), prevent access to admin dashboard
+      if (!result.can_access && result.reason === 'invalid_role') {
+        // Sign out the user and redirect to login with reason
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        url.searchParams.set('reason', 'member_access_denied')
+        
+        // Clear auth cookies to sign out the user
+        const response = NextResponse.redirect(url)
+        response.cookies.delete('sb-access-token')
+        response.cookies.delete('sb-refresh-token')
+        // Delete all supabase auth cookies
+        request.cookies.getAll().forEach(cookie => {
+          if (cookie.name.startsWith('sb-')) {
+            response.cookies.delete(cookie.name)
+          }
+        })
+        return response
+      }
     }
   }
 
