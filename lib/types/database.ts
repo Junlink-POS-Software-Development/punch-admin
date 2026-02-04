@@ -44,6 +44,7 @@ export interface Store {
   store_img: string | null
   user_id: string
   enrollment_id: string
+  deleted_at?: string | null
 }
 
 export interface StoreWithStaffCount extends Store {

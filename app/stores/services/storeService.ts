@@ -11,6 +11,7 @@ export interface Store {
   enrollment_id?: string | null;
   store_img?: string | null;
   created_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface InventoryItem {
@@ -226,4 +227,32 @@ export async function getStoreInventory(supabase: SupabaseClient, storeId: strin
   }
 
   return data as InventoryItem[]
+}
+
+/**
+ * Archive a store (soft delete)
+ */
+export async function archiveStore(supabase: SupabaseClient, storeId: string): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('archive_store', { target_store_id: storeId })
+
+  if (error) {
+    console.error('Error archiving store:', error)
+    throw error
+  }
+
+  return data as { success: boolean; message: string }
+}
+
+/**
+ * Restore an archived store
+ */
+export async function restoreStore(supabase: SupabaseClient, storeId: string): Promise<{ success: boolean; message: string }> {
+  const { data, error } = await supabase.rpc('restore_store', { target_store_id: storeId })
+
+  if (error) {
+    console.error('Error restoring store:', error)
+    throw error
+  }
+
+  return data as { success: boolean; message: string }
 }

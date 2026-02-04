@@ -34,9 +34,16 @@ export function StoreCard({ store }: StoreCardProps) {
           </div>
         )}
         {/* Enrollment Badge */}
-        <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-sm px-2 py-1 text-xs font-medium text-white">
-          <Hash className="h-3 w-3" />
-          {store.enrollment_id}
+        <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
+          <div className="flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-sm px-2 py-1 text-xs font-medium text-white">
+            <Hash className="h-3 w-3" />
+            {store.enrollment_id}
+          </div>
+          {store.deleted_at && (
+            <div className="rounded-full bg-yellow-500 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-black">
+              Archived
+            </div>
+          )}
         </div>
       </div>
 

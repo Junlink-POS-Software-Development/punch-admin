@@ -41,12 +41,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect /dashboard to /dashboard (redundant but keeping for clarity if needed, 
-  // actually the user said "separate dashboard folder for the dashboard features and have it route on /dashboard")
-  // The previous redirect was from /dashboard to /, I should remove that.
-
   // List of public routes that don't require authentication
-  const publicRoutes = ['/login', '/signup', '/reset-password', '/api/auth/callback']
+  const publicRoutes = ['/login', '/signup', '/reset-password', '/api/auth/callback', '/account-deleted']
   const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 
   // Protect all routes except public ones
@@ -68,6 +64,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Check admin access status for authenticated users on protected routes
+  if (user && !isPublicRoute) {
+    const { data: accessCheck, error: accessError } = await supabase.rpc('check_admin_access')
+
+    if (!accessError && accessCheck) {
+      const result = accessCheck as { can_access: boolean; reason: string; message: string }
+      
+      // If account is deleted, redirect to account-deleted page
+      if (!result.can_access && result.reason === 'account_deleted') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/account-deleted'
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+
+  // Prevent deleted users from navigating away from account-deleted (if they're on it)
+  if (user && request.nextUrl.pathname === '/account-deleted') {
+    // Allow them to stay on account-deleted page
+    return supabaseResponse
+  }
+
   return supabaseResponse
 }
 
@@ -76,3 +94,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
+
