@@ -8,10 +8,13 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
 function LoginContent() {
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [memberDenied, setMemberDenied] = useState(false);
   const router = useRouter();
@@ -20,36 +23,77 @@ function LoginContent() {
 
   // Check for member access denied reason in URL
   useEffect(() => {
-    const reason = searchParams.get('reason');
-    if (reason === 'member_access_denied') {
+    const reason = searchParams.get("reason");
+    if (reason === "member_access_denied") {
       setMemberDenied(true);
       // Clean up the URL without triggering a navigation
-      window.history.replaceState({}, '', '/login');
+      window.history.replaceState({}, "", "/login");
     }
   }, [searchParams]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      if (mode === "signup") {
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          setLoading(false);
+          return;
+        }
 
-      if (authError) {
-        setError(authError.message);
-        return;
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+          },
+        });
+
+        if (signUpError) {
+          setError(signUpError.message);
+          return;
+        }
+
+        setError("Check your email to confirm your account");
+      } else {
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (authError) {
+          setError(authError.message);
+          return;
+        }
+
+        router.push("/dashboard");
+        router.refresh();
       }
-
-      router.push("/dashboard");
-      router.refresh();
     } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+        },
+      });
+      if (error) setError(error.message);
+    } catch {
+      setError("Failed to sign in with Google");
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -90,8 +134,8 @@ function LoginContent() {
         </div>
       </div>
 
-      {/* Right Panel - Login Form */}
-      <div className="flex justify-center items-center bg-background p-8 w-full lg:w-1/2">
+      {/* Right Panel - Auth Form */}
+      <div className="flex justify-center items-center bg-background p-8 w-full lg:w-1/2 overflow-y-auto">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex justify-center items-center gap-3 mb-8">
@@ -105,10 +149,12 @@ function LoginContent() {
 
           <div className="mb-8">
             <h2 className="mb-2 font-bold text-foreground text-2xl">
-              Welcome back
+              {mode === "login" ? "Welcome back" : "Create an account"}
             </h2>
             <p className="text-muted-foreground">
-              Sign in to your account to continue
+              {mode === "login"
+                ? "Sign in to your account to continue"
+                : "Enter your details to get started"}
             </p>
           </div>
 
@@ -121,105 +167,180 @@ function LoginContent() {
                     Access Denied
                   </h3>
                   <p className="text-muted-foreground text-sm">
-                    Member accounts cannot access the Admin Dashboard. Please sign in with an Admin account or contact your store administrator for access.
+                    Member accounts cannot access the Admin Dashboard. Please
+                    sign in with an Admin account or contact your store
+                    administrator for access.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            {error && (
-              <div className="bg-destructive/10 px-4 py-3 border border-destructive/20 rounded-lg text-destructive text-sm animate-slide-in-up">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="block font-medium text-foreground text-sm"
-              >
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com"
-                required
-                className="bg-background px-4 py-3 border border-input focus:border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-ring w-full text-foreground placeholder:text-muted-foreground transition-all"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="block font-medium text-foreground text-sm"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  className="bg-background px-4 py-3 pr-12 border border-input focus:border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-ring w-full text-foreground placeholder:text-muted-foreground transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="top-1/2 right-4 absolute text-muted-foreground hover:text-foreground transition-colors -translate-y-1/2"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="border-input rounded focus:ring-primary w-4 h-4 text-primary"
-                />
-                <span className="text-muted-foreground text-sm">
-                  Remember me
-                </span>
-              </label>
-              <Link
-                href="/reset-password"
-                className="font-medium text-primary hover:text-primary/80 text-sm transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
+          <div className="space-y-4">
             <button
-              type="submit"
-              disabled={loading}
-              className="flex justify-center items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 px-4 py-3 rounded-lg w-full font-medium text-primary-foreground transition-all disabled:cursor-not-allowed"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading}
+              className="flex justify-center items-center gap-3 bg-background hover:bg-muted/50 border border-input rounded-lg w-full py-3 font-medium text-foreground transition-all disabled:opacity-50"
             >
-              {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-              {loading ? "Signing in..." : "Sign in"}
+              {googleLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.23.81-.61z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+              )}
+              Continue with Google
             </button>
-          </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-input" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleAuth} className="space-y-4">
+              {error && (
+                <div className="bg-destructive/10 px-4 py-3 border border-destructive/20 rounded-lg text-destructive text-sm animate-slide-in-up">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="email"
+                  className="block font-medium text-foreground text-sm"
+                >
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  required
+                  className="bg-background px-4 py-3 border border-input focus:border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-ring w-full text-foreground placeholder:text-muted-foreground transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="password"
+                  className="block font-medium text-foreground text-sm"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    className="bg-background px-4 py-3 pr-12 border border-input focus:border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-ring w-full text-foreground placeholder:text-muted-foreground transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="top-1/2 right-4 absolute text-muted-foreground hover:text-foreground transition-colors -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {mode === "signup" && (
+                <div className="space-y-2 animate-slide-in-up">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block font-medium text-foreground text-sm"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm your password"
+                    required
+                    className="bg-background px-4 py-3 border border-input focus:border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-ring w-full text-foreground placeholder:text-muted-foreground transition-all"
+                  />
+                </div>
+              )}
+
+              {mode === "login" && (
+                <div className="flex justify-between items-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="border-input rounded focus:ring-primary w-4 h-4 text-primary"
+                    />
+                    <span className="text-muted-foreground text-sm">
+                      Remember me
+                    </span>
+                  </label>
+                  <Link
+                    href="/reset-password"
+                    className="font-medium text-primary hover:text-primary/80 text-sm transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex justify-center items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 px-4 py-3 rounded-lg w-full font-medium text-primary-foreground transition-all disabled:cursor-not-allowed"
+              >
+                {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+                {loading
+                  ? mode === "login"
+                    ? "Signing in..."
+                    : "Creating account..."
+                  : mode === "login"
+                  ? "Sign in"
+                  : "Create account"}
+              </button>
+            </form>
+          </div>
 
           <p className="mt-8 text-muted-foreground text-sm text-center">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
+            {mode === "login"
+              ? "Don't have an account? "
+              : "Already have an account? "}
+            <button
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
               className="font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              Request access
-            </Link>
+              {mode === "login" ? "Create an account" : "Sign in"}
+            </button>
           </p>
         </div>
       </div>
@@ -229,11 +350,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );
