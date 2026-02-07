@@ -4,26 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-/**
- * Metadata expected by the handle_new_user() PostgreSQL trigger.
- */
 export interface AuthUserMetadata {
   role: "admin" | "member";
   business_name?: string;
   first_name?: string;
   last_name?: string;
   avatar?: string;
-}
-
-/**
- * Interface for Google OAuth options, including custom metadata.
- */
-interface GoogleSignInOptions {
-  redirectTo?: string;
-  scopes?: string;
-  queryParams?: { [key: string]: string };
-  skipBrowserRedirect?: boolean;
-  data?: AuthUserMetadata;
 }
 
 export function useAuth() {
@@ -66,11 +52,9 @@ export function useAuth() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/api/auth/callback`,
-            data: {
-              role: "admin",
-              business_name: "My First Store",
-            } as AuthUserMetadata,
+            // Passing the role here for email signups
+            emailRedirectTo: `${window.location.origin}/api/auth/callback?role=admin`,
+            data: { role: "admin" } as AuthUserMetadata,
           },
         });
 
@@ -105,23 +89,19 @@ export function useAuth() {
     setGoogleLoading(true);
     setError(null);
     try {
+      // Determine role based on the current context or force 'admin' for this specific portal
+      const targetRole = "admin"; 
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          // 1. redirectTo uses window.location.origin, which is perfect for
-          // switching between localhost:3000 and your Vercel URL automatically.
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-
-          // 2. This passes the metadata your PostgreSQL function needs
-          data: {
-            role: "admin",
-            business_name: "Admin Dashboard",
-          } as AuthUserMetadata,
+          // KEY CHANGE: Append the role to the callback URL
+          redirectTo: `${window.location.origin}/api/auth/callback?role=${targetRole}`,
           queryParams: {
             access_type: "offline",
-            prompt: "select_account",
+            prompt: "consent",
           },
-        } as GoogleSignInOptions,
+        },
       });
       if (error) setError(error.message);
     } catch {
@@ -132,7 +112,7 @@ export function useAuth() {
   };
 
   const toggleMode = () => {
-    setMode(prev => prev === "login" ? "signup" : "login");
+    setMode(prev => (prev === "login" ? "signup" : "login"));
     setError(null);
   };
 
