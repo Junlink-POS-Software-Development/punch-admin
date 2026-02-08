@@ -12,6 +12,7 @@ export interface Store {
   store_img?: string | null;
   created_at?: string;
   deleted_at?: string | null;
+  co_admins?: string[] | null;
 }
 
 export interface InventoryItem {
@@ -27,6 +28,15 @@ export interface InventoryItem {
   current_stock: number;
   stock_status: 'out_of_stock' | 'low_stock' | 'in_stock';
   store_id: string;
+}
+
+export interface Invitation {
+  id: string;
+  inviter_id: string;
+  invitee_email: string;
+  store_ids: string[];
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
 }
 
 /**
@@ -255,4 +265,176 @@ export async function restoreStore(supabase: SupabaseClient, storeId: string): P
   }
 
   return data as { success: boolean; message: string }
+}
+
+// Multi-Admin System RPCs
+
+/**
+ * Send a co-admin invite for one or more stores.
+ */
+export async function sendCoAdminInvite(
+  supabase: SupabaseClient,
+  storeIds: string[],
+  inviteeEmail: string
+): Promise<{ success: boolean; message: string }> {
+  // Call the 'send_co_admin_invite' RPC
+  // Parameters: specified in requirements as target_store_id (likely expecting array or handle multiple calls? 
+  // User said: send_co_admin_invite -> "First time bringing someone in. Creates a 'pending' record with a list of store IDs."
+  // The RPC likely takes an array of store_ids based on the schema change (store_ids ARRAY)
+  // Let's assume the RPC signature is (store_ids uuid[], invitee_email text) based on context, OR
+  // maybe it was (target_store_ids uuid[], ...).
+  // The user prompt said: "Use the target_store_id and invitee_email_input parameter names exactly as defined in the RPC functions."
+  // But later said "Creates a pending record with a list of store IDs".
+  // I will assume the param is named 'target_store_ids' for the array version, or check if I can inspect it.
+  // Wait, the prompt said: "for sending invitations please use the rpc: send_co_admin_invite"
+  // "Use the target_store_id and invitee_email_input parameter names exactly as defined"
+  // If the previous definition was singular 'target_store_id' and now it's a list, the parameter might have changed to 'target_store_ids' OR 
+  // it might assume we pass a single ID but the underlying table holds an array?
+  // The User clearly stated: "Creates a 'pending' record with a list of store IDs."
+  // So I should probably pass an array.
+  // Let's assume the RPC expects 'target_store_ids' (plural) if it handles a list, or maybe still 'target_store_id' but typed as array?
+  // I'll try 'target_store_ids' as a safe guess for a list, but if it fails I might need to check. 
+  // Actually, standardizing on 'target_store_ids' for array input seems logical.
+  
+  const { error } = await supabase.rpc('send_co_admin_invite', {
+    target_store_ids: storeIds, 
+    invitee_email_input: inviteeEmail
+  })
+
+  if (error) {
+    console.error('Error sending invite:', error)
+    return { success: false, message: error.message }
+  }
+
+  return { success: true, message: 'Invitation sent successfully' }
+}
+
+/**
+ * Accept an invitation.
+ */
+export async function acceptInvitation(
+  supabase: SupabaseClient,
+  invitationId: string
+): Promise<{ success: boolean; message: string }> {
+  const { error } = await supabase.rpc('accept_invitation', {
+    invitation_id: invitationId
+  })
+
+  if (error) {
+    console.error('Error accepting invitation:', error)
+    return { success: false, message: error.message }
+  }
+
+  return { success: true, message: 'Invitation accepted' }
+}
+
+/**
+ * Sync co-admin access (give/remove access to specific stores).
+ */
+export async function syncCoAdminAccess(
+  supabase: SupabaseClient,
+  adminId: string,
+  storeIds: string[]
+): Promise<{ success: boolean; message: string }> {
+  const { error } = await supabase.rpc('sync_co_admin_access', {
+    target_admin_id: adminId,
+    target_store_ids: storeIds
+  })
+
+  if (error) {
+    console.error('Error syncing access:', error)
+    return { success: false, message: error.message }
+  }
+
+  return { success: true, message: 'Access updated successfully' }
+}
+
+/**
+ * Bulk transfer ownership of ALL stores to a co-admin.
+ */
+export async function bulkTransferOwnership(
+  supabase: SupabaseClient,
+  newOwnerId: string
+): Promise<{ success: boolean; message: string }> {
+  const { error } = await supabase.rpc('bulk_transfer_ownership', {
+    new_owner_id: newOwnerId
+  })
+
+  if (error) {
+    console.error('Error transferring ownership:', error)
+    return { success: false, message: error.message }
+  }
+
+  return { success: true, message: 'Ownership transferred successfully' }
+}
+
+/**
+ * Decline an invitation (client-side update since no specific RPC mentions decline logic other than "Decline should simply update the invitations record status")
+ */
+export async function declineInvitation(
+  supabase: SupabaseClient,
+  invitationId: string
+): Promise<{ success: boolean; message: string }> {
+  const { error } = await supabase
+    .from('invitations')
+    .update({ status: 'declined' })
+    .eq('id', invitationId)
+
+  if (error) {
+    console.error('Error declining invitation:', error)
+    return { success: false, message: error.message }
+  }
+
+  return { success: true, message: 'Invitation declined' }
+}
+
+/**
+ * Fetch all stores owned by a specific user.
+ */
+export async function getUserStores(supabase: SupabaseClient, userId: string): Promise<Store[]> {
+  const { data, error } = await supabase
+    .from('stores')
+    .select('*')
+    .eq('user_id', userId)
+
+  if (error) {
+    console.error('Error fetching user stores:', error)
+    return []
+  }
+
+  return data as Store[]
+}
+
+
+export async function getPendingInvitations(supabase: SupabaseClient, email: string): Promise<Invitation[]> {
+  const { data, error } = await supabase
+    .from('invitations')
+    .select('*')
+    .eq('invitee_email', email)
+    .eq('status', 'pending')
+    
+  if (error) {
+    console.error('Error fetching invitations:', error)
+    return []
+  }
+  
+  return data as Invitation[];
+}
+
+export async function getStorePendingInvitations(supabase: SupabaseClient, storeId: string): Promise<Invitation[]> {
+    // Since store_ids is an array, we check if the storeId is IN the array.
+    // Supabase (PostgREST) syntax for array contains: .cs (contains) or .cd (contained by) or .ov (overlap)
+    // .contains('store_ids', [storeId])
+    const { data, error } = await supabase
+      .from('invitations')
+      .select('*')
+      .contains('store_ids', [storeId]) 
+      .eq('status', 'pending')
+      
+    if (error) {
+      console.error('Error fetching store invitations:', error)
+      return []
+    }
+    
+    return data as Invitation[];
 }
