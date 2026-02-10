@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Search, Bell, User, LogOut, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
 
 interface UserInfo {
@@ -18,6 +18,7 @@ export function TopBar() {
   const [user, setUser] = useState<UserInfo | null>(null)
   const [notificationCount] = useState(3) // Mock notification count
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
 
   useEffect(() => {
@@ -49,21 +50,34 @@ export function TopBar() {
     router.refresh()
   }
 
+  const isDashboard = pathname === '/dashboard'
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-6">
-      {/* Search */}
-      <div className="relative w-full max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search members, stores, transactions..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-        />
-        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
-          ⌘K
-        </kbd>
+      {/* Left Section: Contextual */}
+      <div className="w-full max-w-md">
+        {isDashboard ? (
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Overview</h1>
+            <p className="text-xs text-muted-foreground">
+              Welcome back! Here's what's happening today.
+            </p>
+          </div>
+        ) : (
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search members, stores, transactions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+            />
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
+              ⌘K
+            </kbd>
+          </div>
+        )}
       </div>
 
       {/* Right Section */}
