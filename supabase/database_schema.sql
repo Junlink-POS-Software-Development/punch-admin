@@ -47,6 +47,20 @@ CREATE TABLE public.customers (
   CONSTRAINT customers_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.customer_groups(id),
   CONSTRAINT customers_owner_fkey FOREIGN KEY (admin_id) REFERENCES public.users(user_id)
 );
+CREATE TABLE public.daily_store_stats (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  store_id uuid NOT NULL,
+  date date NOT NULL DEFAULT CURRENT_DATE,
+  total_gross_sales numeric DEFAULT 0,
+  total_net_sales numeric DEFAULT 0,
+  transaction_count integer DEFAULT 0,
+  total_cogs numeric DEFAULT 0,
+  total_expenses numeric DEFAULT 0,
+  gross_profit numeric DEFAULT 0,
+  net_profit numeric DEFAULT 0,
+  CONSTRAINT daily_store_stats_pkey PRIMARY KEY (id),
+  CONSTRAINT daily_store_stats_store_id_fkey FOREIGN KEY (store_id) REFERENCES public.stores(store_id)
+);
 CREATE TABLE public.expenses (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   created_at timestamp with time zone NOT NULL DEFAULT now(),

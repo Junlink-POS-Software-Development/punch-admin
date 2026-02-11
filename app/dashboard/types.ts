@@ -67,5 +67,7 @@ export interface FinancialMetrics {
   total_expenses: number
   net_profit: number
   transaction_count: number
-  avg_order_value: number
+  average_order_value: number
+  debug_start?: string
+  debug_end?: string
 }

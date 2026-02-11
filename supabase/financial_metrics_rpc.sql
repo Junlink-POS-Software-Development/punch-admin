@@ -28,11 +28,10 @@ END;
 $$;
 
 -- 2. Main Financial Metrics RPC
--- Updated to bundle all costs into total_expenses and support All Stores view.
 create or replace function get_financial_metrics(
   store_id_param uuid default null,
-  start_date timestamp with time zone default '-infinity',
-  end_date timestamp with time zone default 'infinity'
+  start_date date default '-infinity',
+  end_date date default 'infinity'
 )
 returns json
 language plpgsql
@@ -40,12 +39,13 @@ security definer
 set search_path = public
 as $$
 declare
-  total_gross_sales numeric := 0;
-  total_net_sales numeric := 0;
-  total_expenses numeric := 0;
-  net_profit numeric := 0;
-  transaction_count bigint := 0;
-  avg_order_value numeric := 0;
+  -- Renamed variables to avoid conflict with table columns
+  v_total_gross_sales numeric := 0;
+  v_total_net_sales numeric := 0;
+  v_total_expenses numeric := 0;
+  v_net_profit numeric := 0;
+  v_transaction_count integer := 0;
+  v_average_order_value numeric := 0;
   
   -- Security Variables
   current_user_id uuid := auth.uid();
@@ -53,7 +53,7 @@ declare
   allowed_store_ids uuid[];
   is_admin_view boolean := false;
 begin
-  -- 1. SECURITY & SCOPE (Same robust security as before)
+  -- 1. SECURITY & SCOPE
   SELECT role INTO current_user_role FROM public.users WHERE user_id = current_user_id;
 
   IF store_id_param IS NOT NULL THEN
@@ -74,55 +74,53 @@ begin
       IF allowed_store_ids IS NULL THEN
          return json_build_object(
           'gross_sales', 0, 'net_sales', 0, 
-          'total_expenses', 0, 'net_profit', 0
+          'total_expenses', 0, 'net_profit', 0,
+          'transaction_count', 0, 'average_order_value', 0
         );
       END IF;
     END IF;
   END IF;
 
-  -- 2. CALCULATE SALES (Money In)
-  select 
-    coalesce(sum(t.total_price + coalesce(t.discount, 0)), 0), -- Gross (Sticker Price)
-    coalesce(sum(t.total_price), 0),                           -- Net (Cash Received)
-    count(t.transaction_id)                                   -- Transaction Count
-  into 
-    total_gross_sales, total_net_sales, transaction_count
-  from transactions t
-  where t.transaction_time >= start_date
-  and t.transaction_time <= end_date
-  and (
+  -- 2. THE GOLD STANDARD QUERY (With fixed references)
+  SELECT 
+    -- Explicitly sum the TABLE COLUMNS
+    COALESCE(SUM(d.total_gross_sales), 0),
+    COALESCE(SUM(d.total_net_sales), 0),
+    COALESCE(SUM(d.total_expenses), 0),
+    COALESCE(SUM(d.net_profit), 0),
+    COALESCE(SUM(d.transaction_count), 0)
+  INTO 
+    -- Store result in the RENAMED VARIABLES
+    v_total_gross_sales, 
+    v_total_net_sales, 
+    v_total_expenses, 
+    v_net_profit, 
+    v_transaction_count
+  FROM daily_store_stats d  -- Used alias 'd' to be specific
+  WHERE d.date >= start_date
+  AND d.date <= end_date
+  AND (
     is_admin_view 
-    OR t.store_id = ANY(allowed_store_ids)
+    OR d.store_id = ANY(allowed_store_ids)
   );
 
-  -- 3. CALCULATE EXPENSES (Money Out)
-  -- This now includes COGS, Rent, Salary, Drawings - everything.
-  select 
-    coalesce(sum(e.amount), 0)
-  into total_expenses
-  from expenses e
-  where e.created_at >= start_date
-  and e.created_at <= end_date
-  and (
-    is_admin_view 
-    OR e.store_id = ANY(allowed_store_ids)
-  );
+  -- 3. CALCULATE DERIVED METRICS
+  IF v_transaction_count > 0 THEN
+    v_average_order_value := v_total_net_sales / v_transaction_count;
+  ELSE
+    v_average_order_value := 0;
+  END IF;
 
-  -- 4. CALCULATE DERIVED METRICS
-  net_profit := total_net_sales - total_expenses;
-  
-  if transaction_count > 0 then
-    avg_order_value := total_net_sales / transaction_count;
-  end if;
-
-  -- 5. RETURN SIMPLIFIED JSON
+  -- 5. RETURN RESULT
   return json_build_object(
-    'gross_sales', total_gross_sales,
-    'net_sales', total_net_sales,
-    'total_expenses', total_expenses,
-    'net_profit', net_profit,
-    'transaction_count', transaction_count,
-    'avg_order_value', avg_order_value
+    'gross_sales', v_total_gross_sales,
+    'net_sales', v_total_net_sales,
+    'total_expenses', v_total_expenses,
+    'net_profit', v_net_profit,
+    'transaction_count', v_transaction_count,
+    'average_order_value', round(v_average_order_value, 2),
+    'debug_start', start_date,
+    'debug_end', end_date
   );
 end;
 $$;

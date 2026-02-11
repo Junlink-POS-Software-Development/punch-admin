@@ -1,6 +1,7 @@
 'use client'
 
 import { useFinancialMetrics } from '../../hooks/useFinancialMetrics'
+import { useDashboardStore } from '../../../stores/dashboardStore'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters'
 import { PulseCard } from './PulseCard'
 import {
@@ -11,14 +12,24 @@ import {
 } from 'lucide-react'
 
 export function StatsGrid() {
+  const { dateRange } = useDashboardStore()
   const { data: realData } = useFinancialMetrics()
+
+  // Debug log to catch any weird date shifts
+  if (realData) {
+    console.log('📊 Dashboard Data Debug:', {
+      requested: dateRange,
+      received_start: realData.debug_start,
+      received_end: realData.debug_end,
+    })
+  }
 
   // Only use data from the RPC, no mock fallbacks
   const stats = {
     grossSales: realData?.gross_sales ?? 0,
     netProfit: realData?.net_profit ?? 0,
     transactionCount: realData?.transaction_count ?? 0,
-    aov: realData?.avg_order_value ?? 0,
+    aov: realData?.average_order_value ?? 0,
     grossSalesTrend: 0,
     netProfitTrend: 0,
     transactionTrend: 0,

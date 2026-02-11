@@ -1,12 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { startOfDay, endOfDay, subDays, startOfMonth } from 'date-fns'
+import { startOfDay, endOfDay, subDays, startOfMonth, format } from 'date-fns'
 
 export type DatePreset = 'today' | '7d' | 'month' | 'custom' | 'single'
 
 interface DateRange {
-  from: string // ISO String for persistence
-  to: string   // ISO String for persistence
+  from: string // YYYY-MM-DD for consistency and avoiding UTC shifts
+  to: string   // YYYY-MM-DD
 }
 
 interface DashboardState {
@@ -38,8 +38,8 @@ function getDateRangeForPreset(preset: DatePreset): DateRange {
       range = { from: startOfDay(now), to: endOfDay(now) }
   }
   return {
-    from: range.from.toISOString(),
-    to: range.to.toISOString(),
+    from: format(range.from, 'yyyy-MM-dd'),
+    to: format(range.to, 'yyyy-MM-dd'),
   }
 }
 
@@ -62,13 +62,27 @@ export const useDashboardStore = create<DashboardState>()(
         set({
           datePreset: preset,
           dateRange: {
-            from: range.from.toISOString(),
-            to: range.to.toISOString(),
+            from: format(range.from, 'yyyy-MM-dd'),
+            to: format(range.to, 'yyyy-MM-dd'),
           },
         }),
     }),
     {
-      name: 'dashboard-storage',
+      name: 'dashboard-storage-v4', // Hard reset to clear any stale data
+      version: 4,
+      migrate: (persistedState: any, version: number) => {
+        return persistedState
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const isIso = (s: string, key: string) => s.includes('T')
+          if (isIso(state.dateRange.from, 'from') || isIso(state.dateRange.to, 'to')) {
+            const today = getDateRangeForPreset('today')
+            state.dateRange = today
+            state.datePreset = 'today'
+          }
+        }
+      },
     }
   )
 )
