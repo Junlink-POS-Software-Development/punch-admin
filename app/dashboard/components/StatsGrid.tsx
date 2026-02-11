@@ -1,7 +1,6 @@
 'use client'
 
-import { useDashboardStore } from '@/app/stores/dashboardStore'
-import { getPulseStats } from '@/app/dashboard/data'
+import { useFinancialMetrics } from '../hooks/useFinancialMetrics'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters'
 import { PulseCard } from './PulseCard'
 import {
@@ -12,8 +11,20 @@ import {
 } from 'lucide-react'
 
 export function StatsGrid() {
-  const { selectedBranch, datePreset } = useDashboardStore()
-  const stats = getPulseStats(selectedBranch, datePreset)
+  const { data: realData } = useFinancialMetrics()
+
+  // Only use data from the RPC, no mock fallbacks
+  const stats = {
+    grossSales: realData?.gross_sales ?? 0,
+    netProfit: realData?.net_profit ?? 0,
+    transactionCount: 0, // Not yet in RPC
+    aov: 0, // Not yet in RPC
+    grossSalesTrend: 0,
+    netProfitTrend: 0,
+    transactionTrend: 0,
+    aovTrend: 0,
+    peakHour: 'N/A',
+  }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -24,6 +35,7 @@ export function StatsGrid() {
         subtitle="vs prev. period"
         icon={<DollarSign className="h-5 w-5" />}
         accentColor="bg-primary/10 text-primary"
+        isRealtime={!!realData}
       />
 
       <PulseCard
@@ -34,6 +46,7 @@ export function StatsGrid() {
         tooltip="Revenue minus Costs & Expenses"
         icon={<TrendingUp className="h-5 w-5" />}
         accentColor="bg-success/10 text-success"
+        isRealtime={!!realData}
       />
 
       <PulseCard

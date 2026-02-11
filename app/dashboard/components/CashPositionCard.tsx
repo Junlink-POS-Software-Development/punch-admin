@@ -1,7 +1,6 @@
 'use client'
 
-import { useDashboardStore } from '@/app/stores/dashboardStore'
-import { getLiquidityData } from '@/app/dashboard/data'
+import { useFinancialMetrics } from '../hooks/useFinancialMetrics'
 import { formatCurrency } from '@/lib/utils/formatters'
 import {
   Wallet,
@@ -17,11 +16,24 @@ interface BreakdownLine {
   value: number
   type: 'positive' | 'negative'
   icon: React.ReactNode
+  isRealtime?: boolean
 }
 
 export function CashPositionCard() {
-  const { selectedBranch, datePreset } = useDashboardStore()
-  const data = getLiquidityData(selectedBranch, datePreset)
+  const { data: realData } = useFinancialMetrics()
+
+  // Only use data from the RPC, no mock fallbacks
+  const data = {
+    availableCash: 0, // Not yet in RPC
+    netProfit: realData?.net_profit ?? 0,
+    totalExpenses: realData?.total_expenses ?? 0,
+    ownerDrawings: 0, // Included in totalExpenses now as per user, but kept for visual if needed?
+    // Actually the user said expenses table records EVERYTHING. 
+    // So "availableCash" would be "net_sales - total_expenses" if they want current drawer state?
+    // But let's stick to showing the total expenses as the main negative driver.
+  }
+
+  const hasRealData = !!realData
 
   const breakdownLines: BreakdownLine[] = [
     {
@@ -29,24 +41,14 @@ export function CashPositionCard() {
       value: data.netProfit,
       type: 'positive',
       icon: <TrendingUp className="h-4 w-4" />,
+      isRealtime: hasRealData,
     },
     {
-      label: 'COGS',
-      value: data.cogs,
+      label: 'Total Expenses',
+      value: data.totalExpenses,
       type: 'negative',
       icon: <Package className="h-4 w-4" />,
-    },
-    {
-      label: 'Operating Expenses',
-      value: data.operatingExpenses,
-      type: 'negative',
-      icon: <Building2 className="h-4 w-4" />,
-    },
-    {
-      label: 'Owner Drawings',
-      value: data.ownerDrawings,
-      type: 'negative',
-      icon: <UserMinus className="h-4 w-4" />,
+      isRealtime: hasRealData,
     },
   ]
 
@@ -91,7 +93,9 @@ export function CashPositionCard() {
             <span
               className={cn(
                 'text-sm font-semibold',
-                line.type === 'positive' ? 'text-success' : 'text-destructive'
+                line.isRealtime 
+                  ? 'text-amber-500' 
+                  : line.type === 'positive' ? 'text-success' : 'text-destructive'
               )}
             >
               {line.type === 'positive' ? '+' : '−'}{' '}

@@ -12,6 +12,7 @@ interface PulseCardProps {
   tooltip?: string
   icon: React.ReactNode
   accentColor?: string
+  isRealtime?: boolean
 }
 
 export function PulseCard({
@@ -22,6 +23,7 @@ export function PulseCard({
   tooltip,
   icon,
   accentColor = 'text-primary',
+  isRealtime,
 }: PulseCardProps) {
   const [showTooltip, setShowTooltip] = useState(false)
   const isPositive = trend !== undefined && trend >= 0
@@ -60,7 +62,10 @@ export function PulseCard({
               </div>
             )}
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight truncate">
+          <p className={cn(
+            "text-2xl sm:text-3xl font-bold tracking-tight truncate",
+            isRealtime ? "text-amber-500" : "text-foreground"
+          )}>
             {value}
           </p>
           <div className="flex items-center gap-2 flex-wrap">

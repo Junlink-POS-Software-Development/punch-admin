@@ -28,6 +28,8 @@ export interface PaymentMethodSlice {
   name: string
   value: number
   color: string
+  // Recharts needs index signature
+  [key: string]: string | number
 }
 
 export interface LowStockItem {
@@ -57,4 +59,11 @@ export interface ActivityEvent {
   description: string
   amount: number
   timestamp: string
+}
+
+export interface FinancialMetrics {
+  gross_sales: number
+  net_sales: number
+  total_expenses: number
+  net_profit: number
 }

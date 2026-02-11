@@ -1,7 +1,7 @@
 'use client'
 
-import { useDashboardStore, type DatePreset } from '@/app/stores/dashboardStore'
-import { BRANCHES } from '@/app/dashboard/data'
+import { useDashboardStore, type DatePreset } from '../../stores/dashboardStore'
+import { useStores } from '@/app/stores/hooks/useStores'
 import { format } from 'date-fns'
 import { CalendarDays, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
@@ -23,6 +23,8 @@ export function FilterHeader() {
     setCustomRange,
   } = useDashboardStore()
 
+  const { data: stores } = useStores()
+
   const [branchOpen, setBranchOpen] = useState(false)
   const [customOpen, setCustomOpen] = useState(false)
   const branchRef = useRef<HTMLDivElement>(null)
@@ -40,8 +42,13 @@ export function FilterHeader() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  const allBranches = [
+    { id: 'all', name: 'All Stores' },
+    ...(stores?.map((s: any) => ({ id: s.store_id, name: s.store_name })) || []),
+  ]
+
   const branchLabel =
-    BRANCHES.find((b) => b.id === selectedBranch)?.name ?? 'All Stores'
+    allBranches.find((b) => b.id === selectedBranch)?.name ?? 'All Stores'
 
   return (
     <div className="sticky top-0 z-30 -mx-6 -mt-6 mb-2 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-4">
@@ -76,7 +83,7 @@ export function FilterHeader() {
 
             {branchOpen && (
               <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border border-border bg-card shadow-xl animate-slide-in-up">
-                {BRANCHES.map((b) => (
+                {allBranches.map((b) => (
                   <button
                     key={b.id}
                     type="button"

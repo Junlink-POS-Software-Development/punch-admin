@@ -4,7 +4,7 @@ import {
   LOW_STOCK_ITEMS,
   BEST_SELLERS,
   MOST_STOCKED_ITEMS,
-} from '@/app/dashboard/data'
+} from '../data'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters'
 import { cn } from '@/lib/utils/cn'
 import {
@@ -71,7 +71,7 @@ export function ActionableGrid() {
                     <td className="py-2.5 text-right">
                       <span
                         className={cn(
-                          'inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold min-w-[2rem]',
+                          'inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold min-w-8',
                           critical
                             ? 'bg-destructive/20 text-destructive'
                             : 'bg-warning/15 text-warning'

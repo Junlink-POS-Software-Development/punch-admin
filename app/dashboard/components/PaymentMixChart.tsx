@@ -1,10 +1,28 @@
 'use client'
 
-import { PAYMENT_MIX } from '@/app/dashboard/data'
+import { PAYMENT_MIX } from '../data'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { CreditCard } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export function PaymentMixChart() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-6 h-[400px] flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-40 w-40 rounded-full border-8 border-muted" />
+          <div className="h-4 w-32 bg-muted rounded" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-xl border border-border bg-card p-6">
       <div className="flex items-center gap-3 mb-6">
@@ -46,7 +64,9 @@ export function PaymentMixChart() {
                   fontSize: '0.875rem',
                   boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
                 }}
-                formatter={(value: number) => [`${value}%`, '']}
+                formatter={(value: number | string | undefined) =>
+                  value !== undefined ? [`${value}%`, ''] : ['', '']
+                }
               />
             </PieChart>
           </ResponsiveContainer>
