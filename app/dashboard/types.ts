@@ -66,4 +66,6 @@ export interface FinancialMetrics {
   net_sales: number
   total_expenses: number
   net_profit: number
+  transaction_count: number
+  avg_order_value: number
 }

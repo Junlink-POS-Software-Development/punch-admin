@@ -1,10 +1,10 @@
 'use client'
 
-import { FilterHeader } from './components/FilterHeader'
-import { StatsGrid } from './components/StatsGrid'
-import { LiquiditySection } from './components/LiquiditySection'
-import { ActionableGrid } from './components/ActionableGrid'
-import { OperationsSection } from './components/OperationsSection'
+import { FilterHeader } from './components/filter-header/FilterHeader'
+import { StatsGrid } from './components/stats-grid/StatsGrid'
+import { LiquiditySection } from './components/liquidity-section/LiquiditySection'
+import { ActionableGrid } from './components/actionable-grid/ActionableGrid'
+import { OperationsSection } from './components/operations-section/OperationsSection'
 
 export default function DashboardPage() {
   return (

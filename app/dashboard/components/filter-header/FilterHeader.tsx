@@ -1,7 +1,8 @@
 'use client'
 
-import { useDashboardStore, type DatePreset } from '../../stores/dashboardStore'
+import { useDashboardStore, type DatePreset } from '../../../stores/dashboardStore'
 import { useStores } from '@/app/stores/hooks/useStores'
+import { useFinancialMetrics } from '../../hooks/useFinancialMetrics'
 import { format, startOfDay, endOfDay } from 'date-fns'
 import { CalendarDays, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'

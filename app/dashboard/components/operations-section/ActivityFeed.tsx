@@ -1,6 +1,6 @@
 'use client'
 
-import { ACTIVITY_EVENTS } from '../data'
+import { ACTIVITY_EVENTS } from '../../data'
 import { formatCurrency } from '@/lib/utils/formatters'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { cn } from '@/lib/utils/cn'

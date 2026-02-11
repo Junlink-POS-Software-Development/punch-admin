@@ -29,7 +29,7 @@ export function PulseCard({
   const isPositive = trend !== undefined && trend >= 0
 
   return (
-    <div className="group relative rounded-xl border border-border bg-card p-5 transition-all card-hover overflow-hidden">
+    <div className="group relative rounded-xl border border-border bg-card p-6 transition-all card-hover overflow-hidden">
       {/* Subtle accent gradient at top */}
       <div
         className="absolute inset-x-0 top-0 h-1 rounded-t-xl opacity-60"
@@ -39,7 +39,7 @@ export function PulseCard({
       />
 
       <div className="flex items-start justify-between">
-        <div className="space-y-2 min-w-0 flex-1">
+        <div className="space-y-3 min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             {tooltip && (

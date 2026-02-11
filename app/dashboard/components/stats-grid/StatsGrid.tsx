@@ -1,6 +1,6 @@
 'use client'
 
-import { useFinancialMetrics } from '../hooks/useFinancialMetrics'
+import { useFinancialMetrics } from '../../hooks/useFinancialMetrics'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters'
 import { PulseCard } from './PulseCard'
 import {
@@ -17,8 +17,8 @@ export function StatsGrid() {
   const stats = {
     grossSales: realData?.gross_sales ?? 0,
     netProfit: realData?.net_profit ?? 0,
-    transactionCount: 0, // Not yet in RPC
-    aov: 0, // Not yet in RPC
+    transactionCount: realData?.transaction_count ?? 0,
+    aov: realData?.avg_order_value ?? 0,
     grossSalesTrend: 0,
     netProfitTrend: 0,
     transactionTrend: 0,
@@ -27,7 +27,7 @@ export function StatsGrid() {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <PulseCard
         title="Gross Sales"
         value={formatCurrency(stats.grossSales)}
@@ -56,6 +56,7 @@ export function StatsGrid() {
         subtitle={`Busiest at ${stats.peakHour}`}
         icon={<Receipt className="h-5 w-5" />}
         accentColor="bg-warning/10 text-warning"
+        isRealtime={!!realData}
       />
 
       <PulseCard
@@ -65,6 +66,7 @@ export function StatsGrid() {
         subtitle="per transaction"
         icon={<ShoppingCart className="h-5 w-5" />}
         accentColor="bg-accent text-accent-foreground"
+        isRealtime={!!realData}
       />
     </div>
   )

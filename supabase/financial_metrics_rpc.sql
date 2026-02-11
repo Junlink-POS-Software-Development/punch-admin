@@ -44,6 +44,8 @@ declare
   total_net_sales numeric := 0;
   total_expenses numeric := 0;
   net_profit numeric := 0;
+  transaction_count bigint := 0;
+  avg_order_value numeric := 0;
   
   -- Security Variables
   current_user_id uuid := auth.uid();
@@ -81,9 +83,10 @@ begin
   -- 2. CALCULATE SALES (Money In)
   select 
     coalesce(sum(t.total_price + coalesce(t.discount, 0)), 0), -- Gross (Sticker Price)
-    coalesce(sum(t.total_price), 0)                            -- Net (Cash Received)
+    coalesce(sum(t.total_price), 0),                           -- Net (Cash Received)
+    count(t.transaction_id)                                   -- Transaction Count
   into 
-    total_gross_sales, total_net_sales
+    total_gross_sales, total_net_sales, transaction_count
   from transactions t
   where t.transaction_time >= start_date
   and t.transaction_time <= end_date
@@ -105,15 +108,21 @@ begin
     OR e.store_id = ANY(allowed_store_ids)
   );
 
-  -- 4. CALCULATE NET PROFIT
+  -- 4. CALCULATE DERIVED METRICS
   net_profit := total_net_sales - total_expenses;
+  
+  if transaction_count > 0 then
+    avg_order_value := total_net_sales / transaction_count;
+  end if;
 
   -- 5. RETURN SIMPLIFIED JSON
   return json_build_object(
     'gross_sales', total_gross_sales,
     'net_sales', total_net_sales,
     'total_expenses', total_expenses,
-    'net_profit', net_profit
+    'net_profit', net_profit,
+    'transaction_count', transaction_count,
+    'avg_order_value', avg_order_value
   );
 end;
 $$;

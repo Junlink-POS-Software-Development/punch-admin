@@ -1,6 +1,6 @@
 'use client'
 
-import { useFinancialMetrics } from '../hooks/useFinancialMetrics'
+import { useFinancialMetrics } from '../../hooks/useFinancialMetrics'
 import { formatCurrency } from '@/lib/utils/formatters'
 import {
   Wallet,

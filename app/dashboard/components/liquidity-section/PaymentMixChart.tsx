@@ -1,8 +1,9 @@
 'use client'
 
-import { PAYMENT_MIX } from '../data'
+import { PAYMENT_MIX } from '../../data'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { CreditCard } from 'lucide-react'
+import { useFinancialMetrics } from '../../hooks/useFinancialMetrics'
 import { useEffect, useState } from 'react'
 
 export function PaymentMixChart() {

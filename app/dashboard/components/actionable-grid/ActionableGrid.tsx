@@ -4,7 +4,7 @@ import {
   LOW_STOCK_ITEMS,
   BEST_SELLERS,
   MOST_STOCKED_ITEMS,
-} from '../data'
+} from '../../data'
 import { formatCurrency, formatNumber } from '@/lib/utils/formatters'
 import { cn } from '@/lib/utils/cn'
 import {
