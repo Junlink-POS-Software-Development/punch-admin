@@ -2,7 +2,7 @@
 
 import { useDashboardStore, type DatePreset } from '../../stores/dashboardStore'
 import { useStores } from '@/app/stores/hooks/useStores'
-import { format } from 'date-fns'
+import { format, startOfDay, endOfDay } from 'date-fns'
 import { CalendarDays, ChevronDown, SlidersHorizontal } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils/cn'
@@ -26,7 +26,7 @@ export function FilterHeader() {
   const { data: stores } = useStores()
 
   const [branchOpen, setBranchOpen] = useState(false)
-  const [customOpen, setCustomOpen] = useState(false)
+  const [customOpen, setCustomOpen] = useState<'range' | 'single' | false>(false)
   const branchRef = useRef<HTMLDivElement>(null)
   const customRef = useRef<HTMLDivElement>(null)
 
@@ -50,6 +50,9 @@ export function FilterHeader() {
   const branchLabel =
     allBranches.find((b) => b.id === selectedBranch)?.name ?? 'All Stores'
 
+  const fromDate = new Date(dateRange.from)
+  const toDate = new Date(dateRange.to)
+
   return (
     <div className="sticky top-0 z-30 -mx-6 -mt-6 mb-2 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -61,9 +64,9 @@ export function FilterHeader() {
           <div>
             <h1 className="text-xl font-bold text-foreground">Overview</h1>
             <p className="text-xs text-muted-foreground">
-              {format(dateRange.from, 'MMM d')}
-              {dateRange.from.toDateString() !== dateRange.to.toDateString() &&
-                ` — ${format(dateRange.to, 'MMM d, yyyy')}`}
+              {format(fromDate, 'MMM d, yyyy')}
+              {dateRange.from !== dateRange.to &&
+                ` — ${format(toDate, 'MMM d, yyyy')}`}
             </p>
           </div>
         </div>
@@ -128,58 +131,105 @@ export function FilterHeader() {
 
             {/* Custom Range Trigger */}
             <div className="relative" ref={customRef}>
-              <button
-                type="button"
-                onClick={() => setCustomOpen(!customOpen)}
-                className={cn(
-                  'ml-1 flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all',
-                  datePreset === 'custom'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                )}
-              >
-                <CalendarDays className="h-3.5 w-3.5" />
-                Custom
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomOpen(customOpen === 'single' ? false : 'single')
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all',
+                    datePreset === 'single'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  )}
+                >
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  History
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomOpen(customOpen === 'range' ? false : 'range')
+                  }}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all',
+                    datePreset === 'custom'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  )}
+                >
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Range
+                </button>
+              </div>
 
               {customOpen && (
                 <div className="absolute right-0 top-full mt-2 z-50 w-72 rounded-lg border border-border bg-card p-4 shadow-xl animate-slide-in-up">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">
-                        From
-                      </label>
-                      <input
-                        type="date"
-                        value={format(dateRange.from, 'yyyy-MM-dd')}
-                        onChange={(e) => {
-                          if (e.target.value)
-                            setCustomRange({
-                              from: new Date(e.target.value),
-                              to: dateRange.to,
-                            })
-                        }}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
+                  {customOpen === 'single' ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Select Date
+                        </label>
+                        <input
+                          type="date"
+                          value={format(fromDate, 'yyyy-MM-dd')}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const d = new Date(e.target.value)
+                              setCustomRange({
+                                from: startOfDay(d),
+                                to: endOfDay(d),
+                              }, 'single')
+                            }
+                          }}
+                          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">
-                        To
-                      </label>
-                      <input
-                        type="date"
-                        value={format(dateRange.to, 'yyyy-MM-dd')}
-                        onChange={(e) => {
-                          if (e.target.value)
-                            setCustomRange({
-                              from: dateRange.from,
-                              to: new Date(e.target.value),
-                            })
-                        }}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          From
+                        </label>
+                        <input
+                          type="date"
+                          value={format(fromDate, 'yyyy-MM-dd')}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const d = new Date(e.target.value)
+                              setCustomRange({
+                                from: d,
+                                to: toDate,
+                              })
+                            }
+                          }}
+                          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          To
+                        </label>
+                        <input
+                          type="date"
+                          value={format(toDate, 'yyyy-MM-dd')}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const d = new Date(e.target.value)
+                              setCustomRange({
+                                from: fromDate,
+                                to: d,
+                              })
+                            }
+                          }}
+                          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>

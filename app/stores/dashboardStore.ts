@@ -1,11 +1,12 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { startOfDay, endOfDay, subDays, startOfMonth } from 'date-fns'
 
-export type DatePreset = 'today' | '7d' | 'month' | 'custom'
+export type DatePreset = 'today' | '7d' | 'month' | 'custom' | 'single'
 
 interface DateRange {
-  from: Date
-  to: Date
+  from: string // ISO String for persistence
+  to: string   // ISO String for persistence
 }
 
 interface DashboardState {
@@ -14,39 +15,60 @@ interface DashboardState {
   dateRange: DateRange
   setBranch: (branch: string) => void
   setPreset: (preset: DatePreset) => void
-  setCustomRange: (range: DateRange) => void
+  setCustomRange: (range: { from: Date; to: Date }, preset?: DatePreset) => void
 }
 
 function getDateRangeForPreset(preset: DatePreset): DateRange {
   const now = new Date()
+  let range: { from: Date; to: Date }
   switch (preset) {
     case 'today':
-      return { from: startOfDay(now), to: endOfDay(now) }
+      range = { from: startOfDay(now), to: endOfDay(now) }
+      break
     case '7d':
-      return { from: startOfDay(subDays(now, 6)), to: endOfDay(now) }
+      range = { from: startOfDay(subDays(now, 6)), to: endOfDay(now) }
+      break
     case 'month':
-      return { from: startOfMonth(now), to: endOfDay(now) }
+      range = { from: startOfMonth(now), to: endOfDay(now) }
+      break
+    case 'single':
+      range = { from: startOfDay(now), to: endOfDay(now) }
+      break
     default:
-      return { from: startOfDay(now), to: endOfDay(now) }
+      range = { from: startOfDay(now), to: endOfDay(now) }
+  }
+  return {
+    from: range.from.toISOString(),
+    to: range.to.toISOString(),
   }
 }
 
-export const useDashboardStore = create<DashboardState>((set) => ({
-  selectedBranch: 'all',
-  datePreset: 'today',
-  dateRange: getDateRangeForPreset('today'),
+export const useDashboardStore = create<DashboardState>()(
+  persist(
+    (set) => ({
+      selectedBranch: 'all',
+      datePreset: 'today',
+      dateRange: getDateRangeForPreset('today'),
 
-  setBranch: (branch) => set({ selectedBranch: branch }),
+      setBranch: (branch) => set({ selectedBranch: branch }),
 
-  setPreset: (preset) =>
-    set({
-      datePreset: preset,
-      dateRange: getDateRangeForPreset(preset),
+      setPreset: (preset) =>
+        set({
+          datePreset: preset,
+          dateRange: getDateRangeForPreset(preset),
+        }),
+
+      setCustomRange: (range, preset = 'custom') =>
+        set({
+          datePreset: preset,
+          dateRange: {
+            from: range.from.toISOString(),
+            to: range.to.toISOString(),
+          },
+        }),
     }),
-
-  setCustomRange: (range) =>
-    set({
-      datePreset: 'custom',
-      dateRange: range,
-    }),
-}))
+    {
+      name: 'dashboard-storage',
+    }
+  )
+)

@@ -7,9 +7,9 @@ export function useFinancialMetrics() {
   const { selectedBranch, dateRange } = useDashboardStore()
   const supabase = createClient()
 
-  // Convert Date objects to ISO strings for the RPC
-  const startDate = dateRange.from.toISOString()
-  const endDate = dateRange.to.toISOString()
+  // Use ISO strings directly from the store
+  const startDate = dateRange.from
+  const endDate = dateRange.to
 
   // Enable for individual branches or 'all'
   const isEnabled = !!selectedBranch
