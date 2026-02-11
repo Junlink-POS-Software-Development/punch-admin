@@ -19,7 +19,7 @@ export const OperationsSection = () => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       {/* Quick Actions (1 col) */}
-      <div className="bg-card border border-border rounded-xl p-6 flex flex-col">
+      <div className="bg-card border border-border rounded-xl p-6 flex flex-col shadow-sm">
          <h3 className="font-semibold mb-4 text-lg">Quick Actions</h3>
          <div className="grid grid-cols-2 gap-3">
             {actions.map((action) => (
@@ -40,7 +40,7 @@ export const OperationsSection = () => {
       </div>
 
       {/* Recent Activity (2 cols) */}
-      <div className="lg:col-span-2 bg-card border border-border rounded-xl p-6 flex flex-col">
+      <div className="lg:col-span-2 bg-card border border-border rounded-xl p-6 flex flex-col shadow-sm">
         <h3 className="font-semibold mb-4 text-lg">Recent Activity</h3>
         <div className="relative border-l border-border/50 ml-3 space-y-6">
             {activities?.map((activity) => (

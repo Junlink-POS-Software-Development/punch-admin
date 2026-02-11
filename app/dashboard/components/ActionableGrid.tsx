@@ -22,7 +22,7 @@ export const ActionableGrid = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       
       {/* 1. Low Stock Alerts */}
-      <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden h-full">
+      <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden h-full shadow-sm">
         <div className="p-4 border-b bg-rose-50/50 dark:bg-rose-950/20 flex items-center justify-between">
             <h3 className="font-semibold flex items-center gap-2 text-rose-700 dark:text-rose-400">
                 <AlertTriangle className="w-4 h-4" />
@@ -65,7 +65,7 @@ export const ActionableGrid = () => {
       </div>
 
       {/* 2. Top 5 Best Sellers */}
-      <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden h-full">
+      <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden h-full shadow-sm">
         <div className="p-4 border-b flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" />
             <h3 className="font-semibold">Top Best Sellers</h3>
@@ -101,7 +101,7 @@ export const ActionableGrid = () => {
       </div>
 
       {/* 3. Most Stocked (Value) */}
-      <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden h-full">
+      <div className="bg-card border border-border rounded-xl flex flex-col overflow-hidden h-full shadow-sm">
         <div className="p-4 border-b flex items-center gap-2">
             <Package className="w-4 h-4 text-primary" />
             <h3 className="font-semibold">High Value Inventory</h3>

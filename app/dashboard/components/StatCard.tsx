@@ -30,7 +30,7 @@ export const StatCard = ({
   
   return (
     <div className={cn(
-      "relative p-6 rounded-xl border transition-all duration-200 hover:shadow-md",
+      "relative p-6 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md",
       variant === 'highlight' 
         ? "bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/20" 
         : "bg-card border-border"

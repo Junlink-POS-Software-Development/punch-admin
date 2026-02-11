@@ -9,7 +9,7 @@ import { OperationsSection } from './components/OperationsSection'
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-background pb-20 space-y-8 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-muted/40 pb-20 space-y-8 animate-in fade-in duration-500">
       
       {/* Section 0: Filter Header */}
       <FilterHeader />
