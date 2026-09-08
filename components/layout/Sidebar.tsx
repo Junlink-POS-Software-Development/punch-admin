@@ -34,14 +34,14 @@ export function Sidebar() {
       {/* Backdrop for handling clicks outside when sidebar is open */}
       {!sidebarCollapsed && (
         <div 
-          className="fixed inset-0 z-30 bg-background/50 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 z-30 bg-background/50 backdrop-blur-sm transition-opacity hidden lg:block"
           onClick={toggleSidebar}
         />
       )}
 
       <aside 
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out',
+          'fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out hidden lg:flex flex-col',
           sidebarCollapsed ? 'w-12 lg:w-20' : 'w-64'
         )}
       >

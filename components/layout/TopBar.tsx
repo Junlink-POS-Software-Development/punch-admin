@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Search, Bell, User, LogOut, ChevronDown } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
@@ -50,16 +52,26 @@ export function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-6">
+    <header className="sticky top-0 z-30 flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-3 sm:px-6 gap-2 sm:gap-4">
+      {/* Mobile Brand Logo */}
+      <div className="flex lg:hidden items-center gap-2 shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <Logo className="h-5 w-5 text-primary" />
+          </div>
+          <span className="text-base font-bold text-foreground tracking-tight hidden xs:inline sm:inline">JunLink</span>
+        </Link>
+      </div>
+
       {/* Search */}
-      <div className="relative w-full max-w-md">
+      <div className="relative flex-1 max-w-[180px] sm:max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search members, stores, transactions..."
+          placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+          className="w-full rounded-lg border border-input bg-background py-1.5 sm:py-2 pl-9 sm:pl-10 pr-3 sm:pr-4 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
         />
         <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
           ⌘K
@@ -67,7 +79,7 @@ export function TopBar() {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {/* Notifications */}
         <button className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
           <Bell className="h-5 w-5" />

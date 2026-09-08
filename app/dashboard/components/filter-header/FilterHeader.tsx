@@ -62,7 +62,7 @@ export function FilterHeader() {
   const toDate = parseSafe(dateRange.to)
 
   return (
-    <div className="sticky top-0 z-30 -mx-6 -mt-4 sm:-mt-6 mb-2 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 sm:py-4 w-[calc(100%+3rem)]">
+    <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-2 bg-background/80 backdrop-blur-lg border-b border-border px-4 sm:px-6 py-3 sm:py-4 w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Title */}
         <div className="flex items-center gap-2 sm:gap-3">

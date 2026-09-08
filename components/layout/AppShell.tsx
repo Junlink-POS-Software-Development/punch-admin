@@ -2,6 +2,7 @@
 
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
+import { MobileNav } from '@/components/layout/MobileNav'
 import { useUIStore } from '@/app/dashboard/stores/uiStore'
 import { cn } from '@/lib/utils/cn'
 import { usePathname } from 'next/navigation'
@@ -23,14 +24,15 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Sidebar />
-      <div className="flex-1 pl-12 lg:pl-20">
+      <div className="flex-1 pl-0 lg:pl-20 flex flex-col">
         <TopBar />
-        <main className="p-6">
+        <main className="flex-1 p-4 lg:p-6 pb-24 lg:pb-6">
           {children}
         </main>
       </div>
+      <MobileNav />
     </div>
   )
 }
