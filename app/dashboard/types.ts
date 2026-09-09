@@ -65,6 +65,21 @@ export interface MostStockedItem {
   stockValue: number
 }
 
+export interface DashboardInventoryItem {
+  item_id: string
+  store_id: string
+  item_name: string
+  sku?: string | null
+  category?: string | null
+  sales_price?: number | null
+  unit_cost?: number | null
+  cost_price?: number | null
+  image_url?: string | null
+  low_stock_threshold?: number | null
+  current_stock: number
+  stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock' | string
+}
+
 export interface ActivityEvent {
   id: string
   type: 'sale' | 'restock' | 'expense'
