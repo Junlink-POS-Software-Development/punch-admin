@@ -52,3 +52,137 @@ export async function getFinancialMetrics(
     debug_end: endDate,
   };
 }
+
+export interface CashPositionData {
+  availableCash: number
+  openingBalance: number
+  totalCashIn: number
+  totalCashOut: number
+  netCashFlow: number
+  asOfDate: string
+}
+
+export async function getAvailableCashPosition(
+  supabase: SupabaseClient,
+  storeId: string | null | undefined,
+  startDate: string,
+  endDate: string
+): Promise<CashPositionData> {
+  const normalizedStoreId = (!storeId || storeId === '' || storeId === 'all') ? null : storeId;
+
+  if (normalizedStoreId) {
+    // 1. Single Store
+    const [priorRes, rangeRes, latestRes] = await Promise.all([
+      supabase
+        .from('overall_cash_flow')
+        .select('balance')
+        .eq('store_id', normalizedStoreId)
+        .lt('date', startDate)
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('overall_cash_flow')
+        .select('cash_in, cash_out')
+        .eq('store_id', normalizedStoreId)
+        .gte('date', startDate)
+        .lte('date', endDate),
+      supabase
+        .from('overall_cash_flow')
+        .select('balance')
+        .eq('store_id', normalizedStoreId)
+        .lte('date', endDate)
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    const openingBalance = Number(priorRes.data?.balance || 0);
+    const totalCashIn = (rangeRes.data || []).reduce((sum, r) => sum + Number(r.cash_in || 0), 0);
+    const totalCashOut = (rangeRes.data || []).reduce((sum, r) => sum + Number(r.cash_out || 0), 0);
+    const availableCash = Number(latestRes.data?.balance ?? (openingBalance + totalCashIn - totalCashOut));
+
+    return {
+      availableCash,
+      openingBalance,
+      totalCashIn,
+      totalCashOut,
+      netCashFlow: totalCashIn - totalCashOut,
+      asOfDate: endDate,
+    };
+  }
+
+  // 2. All Stores
+  const { data: stores, error: storesError } = await supabase
+    .from('stores')
+    .select('store_id')
+    .is('deleted_at', null);
+
+  if (storesError || !stores || stores.length === 0) {
+    return {
+      availableCash: 0,
+      openingBalance: 0,
+      totalCashIn: 0,
+      totalCashOut: 0,
+      netCashFlow: 0,
+      asOfDate: endDate,
+    };
+  }
+
+  const storeCalculations = await Promise.all(
+    stores.map(async (s) => {
+      const [priorRes, rangeRes, latestRes] = await Promise.all([
+        supabase
+          .from('overall_cash_flow')
+          .select('balance')
+          .eq('store_id', s.store_id)
+          .lt('date', startDate)
+          .order('date', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('overall_cash_flow')
+          .select('cash_in, cash_out')
+          .eq('store_id', s.store_id)
+          .gte('date', startDate)
+          .lte('date', endDate),
+        supabase
+          .from('overall_cash_flow')
+          .select('balance')
+          .eq('store_id', s.store_id)
+          .lte('date', endDate)
+          .order('date', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const opening = Number(priorRes.data?.balance || 0);
+      const cin = (rangeRes.data || []).reduce((sum, r) => sum + Number(r.cash_in || 0), 0);
+      const cout = (rangeRes.data || []).reduce((sum, r) => sum + Number(r.cash_out || 0), 0);
+      const ending = Number(latestRes.data?.balance ?? (opening + cin - cout));
+
+      return { opening, cin, cout, ending };
+    })
+  );
+
+  let totalOpening = 0;
+  let totalIn = 0;
+  let totalOut = 0;
+  let totalEnding = 0;
+
+  for (const sc of storeCalculations) {
+    totalOpening += sc.opening;
+    totalIn += sc.cin;
+    totalOut += sc.cout;
+    totalEnding += sc.ending;
+  }
+
+  return {
+    availableCash: totalEnding,
+    openingBalance: totalOpening,
+    totalCashIn: totalIn,
+    totalCashOut: totalOut,
+    netCashFlow: totalIn - totalOut,
+    asOfDate: endDate,
+  };
+}
