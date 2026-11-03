@@ -122,10 +122,10 @@ export function MonthlyGrossTrend() {
   }, [granularity, offset])
 
   // Data fetching
-  const { data: dailyRaw, isLoading: dailyLoading } = useGrossTrendData(startDateStr, endDateStr)
-  const { data: multiDailyRaw, isLoading: multiDailyLoading } = useMultiStoreGrossTrendData(startDateStr, endDateStr)
-  const { data: hourlyRaw, isLoading: hourlyLoading } = useHourlyGrossTrendData(targetDateStr)
-  const { data: multiHourlyRaw, isLoading: multiHourlyLoading } = useMultiStoreHourlyGrossTrendData(targetDateStr)
+  const { data: dailyRaw, isLoading: dailyLoading } = useGrossTrendData(startDateStr, endDateStr, storeIds)
+  const { data: multiDailyRaw, isLoading: multiDailyLoading } = useMultiStoreGrossTrendData(startDateStr, endDateStr, storeIds)
+  const { data: hourlyRaw, isLoading: hourlyLoading } = useHourlyGrossTrendData(targetDateStr, storeIds)
+  const { data: multiHourlyRaw, isLoading: multiHourlyLoading } = useMultiStoreHourlyGrossTrendData(targetDateStr, storeIds)
 
   // Determine current dataset and loading state based on selections
   let allData: any[] = []

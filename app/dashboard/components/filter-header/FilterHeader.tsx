@@ -3,6 +3,7 @@
 import { useDashboardStore, type DatePreset } from '../../../stores/dashboardStore'
 import { useStores } from '@/app/stores/hooks/useStores'
 import { useFinancialMetrics } from '../../hooks/useFinancialMetrics'
+import { useQueryClient } from '@tanstack/react-query'
 import { format, startOfDay, endOfDay } from 'date-fns'
 import { CalendarDays, ChevronDown, SlidersHorizontal, RefreshCw } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
@@ -26,6 +27,16 @@ export function FilterHeader() {
   
   const { data: stores } = useStores()
   const { refetch, isFetching } = useFinancialMetrics()
+  const queryClient = useQueryClient()
+
+  const handleRefresh = () => {
+    refetch()
+    queryClient.invalidateQueries({ queryKey: ['gross-trend-daily'] })
+    queryClient.invalidateQueries({ queryKey: ['gross-trend-daily-per-store'] })
+    queryClient.invalidateQueries({ queryKey: ['gross-trend-hourly'] })
+    queryClient.invalidateQueries({ queryKey: ['gross-trend-hourly-per-store'] })
+    queryClient.invalidateQueries({ queryKey: ['pulse-trends'] })
+  }
 
   const [branchOpen, setBranchOpen] = useState(false)
   const [customOpen, setCustomOpen] = useState<'range' | 'single' | false>(false)
@@ -84,7 +95,7 @@ export function FilterHeader() {
           {/* Refresh Button */}
           <button
             type="button"
-            onClick={() => refetch()}
+            onClick={handleRefresh}
             disabled={isFetching}
             className={cn(
               "flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:bg-accent hover:text-foreground active:scale-95 disabled:opacity-50",
